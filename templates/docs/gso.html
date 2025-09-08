@@ -1,0 +1,558 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'gso' %}
+{% block title %}GSO Documents{% endblock %}
+{% block header_title %}GSO Documents{% endblock %}
+{% block content %}
+<!-- Bootstrap CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+{% if success == '1' %}
+<div id="successModal" style="display:flex;position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(80,110,255,0.10);align-items:center;justify-content:center;animation:fadeInBg 0.3s;">
+    <div style="background:linear-gradient(135deg,#4f5bd5 0%,#6a82fb 100%);min-width:340px;max-width:90vw;padding:2.5rem 2.7rem 2.2rem 2.7rem;border-radius:22px;box-shadow:0 8px 40px #4f5bd533;position:relative;text-align:center;animation:popIn 0.35s cubic-bezier(.4,2,.6,1);">
+        <button onclick="closeSuccessModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.3rem;color:#fff;cursor:pointer;transition:color 0.2s;">&times;</button>
+        <div style="font-size:2.7rem;margin-bottom:1.1rem;color:#38ef7d;">&#10003;</div>
+        <div style="font-size:1.35rem;font-weight:800;color:#fff;margin-bottom:0.7rem;letter-spacing:0.5px;">Document Added!</div>
+        <div style="color:#e0e7ef;font-size:1.08rem;margin-bottom:1.3rem;">Your GSO document was successfully added to the system.</div>
+        <button onclick="closeSuccessModal()" style="background:#fff;color:#4f5bd5;border:none;padding:0.7rem 2.2rem;border-radius:9px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px #4f5bd522;transition:background 0.15s;">OK</button>
+    </div>
+</div>
+<script>
+function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+    if (window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('success');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+}
+setTimeout(closeSuccessModal, 2000);
+</script>
+{% endif %}
+<div style="display:flex;gap:1.2rem;flex-wrap:wrap;max-width:900px;margin:0 auto 2.2rem auto;">
+    <div style="flex:1;min-width:180px;background:linear-gradient(135deg,#4f5bd5 0%,#6a82fb 100%);color:#fff;border-radius:14px;box-shadow:0 4px 14px #e0e7ef22;padding:1.2rem 1rem;display:flex;align-items:center;gap:1rem;">
+        <div style="font-size:2rem;">&#128221;</div>
+        <div>
+            <div style="font-size:1.5rem;font-weight:700;">{{ total_gso_today }}</div>
+            <div style="color:#e0e7ef;font-size:1rem;">Documents Today</div>
+        </div>
+    </div>
+    <div style="flex:1;min-width:180px;background:linear-gradient(135deg,#b24592 0%,#f15f79 100%);color:#fff;border-radius:14px;box-shadow:0 4px 14px #e0e7ef22;padding:1.2rem 1rem;display:flex;align-items:center;gap:1rem;">
+        <div style="font-size:2rem;">&#128196;</div>
+        <div>
+            <div style="font-size:1.5rem;font-weight:700;">{{ total_gso_all }}</div>
+            <div style="color:#e0e7ef;font-size:1rem;">All Documents</div>
+        </div>
+    </div>
+</div>
+
+<!-- Add GSO Document Button Card -->
+<div style="display:flex;gap:2rem;max-width:1400px;margin:0 0 0 2rem;align-items:flex-start;">
+    <div style="flex:0 0 450px;background:#fff;padding:3rem;border-radius:16px;box-shadow:0 2px 12px #e0e7ef22;text-align:center;">
+        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:2rem;color:#4f5bd5;">Quick Actions</h3>
+        <button id="openGsoFormBtn" class="animated-gso-btn" style="background:linear-gradient(90deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;border:none;border-radius:12px;padding:1.2rem 2rem;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 16px #6a82fb33;transition:all 0.3s cubic-bezier(.4,2,.6,1);width:100%;margin-bottom:1.5rem;position:relative;overflow:hidden;">&#10133; Add GSO Document</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <button id="showAllDocumentsBtn" class="animated-gso-btn" style="background:linear-gradient(90deg,#43cea2 0%,#185a9d 100%);color:#fff;border:none;border-radius:12px;padding:1rem 1.2rem;font-weight:700;font-size:0.95rem;cursor:pointer;box-shadow:0 4px 16px #43cea233;transition:all 0.3s cubic-bezier(.4,2,.6,1);position:relative;overflow:hidden;">📄 All Documents</button>
+            <button id="showMonthlyRecordsBtn" class="animated-gso-btn" style="background:linear-gradient(90deg,#8f6ed5 0%,#6a82fb 100%);color:#fff;border:none;border-radius:12px;padding:1rem 1.2rem;font-weight:700;font-size:0.95rem;cursor:pointer;box-shadow:0 4px 16px #8f6ed533;transition:all 0.3s cubic-bezier(.4,2,.6,1);position:relative;overflow:hidden;">📊 Monthly</button>
+        </div>
+    </div>
+    <div style="flex:1;">
+        <div style="background:#fff;padding:2.5rem;border-radius:16px;box-shadow:0 2px 12px #e0e7ef22;">
+            <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;color:#4f5bd5;">Recent Added Documents</h3>
+            <div style="max-height:400px;overflow-y:auto;">
+                <table style="width:100%;border-collapse:separate;border-spacing:0 0.5rem;font-size:1rem;">
+                    <thead>
+                        <tr style="background:#f7fbff;font-size:0.95rem;color:#6a82fb;">
+                            <th style="padding:0.8rem 0.7rem;text-align:left;">Date</th>
+                            <th style="padding:0.8rem 0.7rem;text-align:left;">Supplier</th>
+                            <th style="padding:0.8rem 0.7rem;text-align:left;">Office</th>
+                            <th style="padding:0.8rem 0.7rem;text-align:left;">Amount</th>
+                            <th style="padding:0.8rem 0.7rem;text-align:left;">Document</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in gso_docs[:5] %}
+                        <tr style="border-top:1px solid #f0f0f0;background:#fff;">
+                            <td style="padding:0.7rem 0.7rem;">{{ doc.date }}</td>
+                            <td style="padding:0.7rem 0.7rem;max-width:150px;word-break:break-word;white-space:normal;">{{ doc.supplier_name }}</td>
+                            <td style="padding:0.7rem 0.7rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.office }}</td>
+                            <td style="padding:0.7rem 0.7rem;">{{ doc.amount }}</td>
+                            <td style="padding:0.7rem 0.7rem;max-width:150px;word-break:break-word;white-space:normal;">
+                                {% if doc.document_file %}
+                                    <span style="color:#6a82fb;font-weight:600;font-size:0.9rem;">{{ doc.document_file }}</span>
+                                {% else %}No file{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="padding:2rem;text-align:center;color:#888;font-size:0.95rem;">No recent documents found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</div>
+
+<!-- GSO Form Modal -->
+<div id="gsoFormModal" style="display:none;position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(80,110,255,0.10);align-items:center;justify-content:center;">
+    <div style="background:#fff;max-width:900px;width:95vw;padding:3.5rem 3.5rem 2.5rem 3.5rem;border-radius:22px;box-shadow:0 8px 40px #6a82fb33;position:relative;animation:popIn 0.25s cubic-bezier(.4,2,.6,1);max-height:90vh;overflow-y:auto;">
+                <button onclick="closeGsoFormModal()" style="position:absolute;top:18px;right:18px;background:none;border:none;font-size:1.5rem;color:#6a82fb;cursor:pointer;">&times;</button>
+    <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:2rem;text-align:left;">GSO Page</h2>
+        <form method="POST" enctype="multipart/form-data" style="margin-bottom:2.5rem;display:grid;gap:1.2rem;grid-template-columns:1fr 1fr;">
+    <form method="POST" enctype="multipart/form-data" style="margin-bottom:2.5rem;display:grid;gap:1.2rem;grid-template-columns:1fr 1fr;">
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <label for="date" style="font-weight:600;">Date</label>
+            <input type="date" id="date" name="date" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1px solid #e0e7ef;font-size:1.08rem;" readonly>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <label for="supplier_name" style="font-weight:600;">Supplier's Name</label>
+            <input type="text" id="supplier_name" name="supplier_name" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1px solid #e0e7ef;font-size:1.08rem;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <label for="office" style="font-weight:600;">Office</label>
+            <input type="text" id="office" name="office" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1px solid #e0e7ef;font-size:1.08rem;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <label for="amount" style="font-weight:600;">Amount</label>
+            <input type="number" step="0.01" id="amount" name="amount" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1px solid #e0e7ef;font-size:1.08rem;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <label for="forwarded_to" style="font-weight:600;">Forwarded To</label>
+            <input type="text" id="forwarded_to" name="forwarded_to" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1px solid #e0e7ef;font-size:1.08rem;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;grid-column:1/-1;">
+            <div style="width:100%;max-width:340px;margin:0 auto;background:#f7fbff;border:2px dashed #b3b8f7;border-radius:12px;padding:1.2rem 0.7rem;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:1.0rem;">
+                <label for="document_file" style="font-weight:700;color:#6a82fb;font-size:0.98rem;margin-bottom:0.7rem;">Attach Document</label>
+                <input id="document_file" name="document_file" type="file" style="display:none;" required onchange="showFileName(this)">
+                <button type="button" onclick="document.getElementById('document_file').click();" style="background:#6a82fb;color:#fff;padding:0.48rem 1.2rem;border:none;border-radius:7px;font-size:0.98rem;font-weight:600;cursor:pointer;">Choose File</button>
+                <div id="fileNameDisplay" style="margin-top:0.5rem;color:#444;font-size:0.93rem;word-break:break-all;"></div>
+            </div>
+        </div>
+        <div style="grid-column:1/-1;text-align:right;">
+            <button type="submit" style="background:linear-gradient(90deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;border:none;border-radius:9px;padding:0.9rem 2.2rem;font-weight:700;font-size:1.1rem;cursor:pointer;">Upload</button>
+        </div>
+    </form>
+</div>
+</div>
+    </div>
+</div>
+<!-- All GSO Documents Modal -->
+<div id="allGsoModal" style="display:none;position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(80,110,255,0.10);align-items:center;justify-content:center;">
+    <div style="background:#fff;max-width:1600px;width:95vw;padding:3.5rem 3.5rem 2.5rem 3.5rem;border-radius:22px;box-shadow:0 8px 40px #6a82fb33;position:relative;animation:popIn 0.25s cubic-bezier(.4,2,.6,1);max-height:90vh;overflow-y:auto;">
+        <button onclick="closeAllGsoModal()" style="position:absolute;top:18px;right:18px;background:none;border:none;font-size:1.5rem;color:#6a82fb;cursor:pointer;">&times;</button>
+    <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:1.2rem;text-align:left;">All GSO Documents</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:0.8rem;">
+                <input type="date" id="startDateFilter" style="padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid #ff6b35;font-size:1.08rem;min-width:180px;">
+                <span style="color:#ff6b35;font-weight:600;">to</span>
+                <input type="date" id="endDateFilter" style="padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid #ff6b35;font-size:1.08rem;min-width:180px;">
+            </div>
+            <div style="display:flex;gap:0.8rem;">
+                <button id="filterBtn" style="background:linear-gradient(90deg,#ff6b35 0%,#f7931e 100%);color:#fff;border:none;border-radius:8px;padding:0.6rem 1.2rem;font-weight:700;font-size:1.08rem;cursor:pointer;">Filter</button>
+                <button id="clearFilterBtn" style="background:#4a4a4a;color:#fff;border:none;border-radius:8px;padding:0.6rem 1.2rem;font-weight:700;font-size:1.08rem;cursor:pointer;">Clear</button>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1.2rem;">
+            <input type="text" id="searchSupplierAll" placeholder="Search Supplier..." style="padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid #6a82fb;font-size:1.08rem;min-width:220px;">
+        </div>
+        <div style="max-height:60vh;overflow-y:auto;">
+        <table id="allGsoTable" style="width:100%;border-collapse:separate;border-spacing:0 0.5rem;font-size:1.18rem;background:#f7fbff;border-radius:14px;overflow:hidden;">
+            <thead>
+                <tr style="background:#f7fbff;font-size:1.09rem;color:#6a82fb;">
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Date</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Supplier</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Office</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Amount</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:200px;word-break:break-word;white-space:normal;">Forwarded To</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Document</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Preview</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in gso_docs_all %}
+                    <tr data-date="{{ doc.date }}" style="border-top:1px solid #f0f0f0;background:#fff;">
+                    <td style="padding:1rem 0.9rem;">{{ doc.date }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">{{ doc.supplier_name }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.office }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.amount }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:200px;word-break:break-word;white-space:normal;">{{ doc.forwarded_to }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">
+                        {% if doc.document_file %}
+                            <span style="color:#6a82fb;font-weight:600;">{{ doc.document_file }}</span>
+                        {% else %}No file{% endif %}
+                    </td>
+                    <td style="padding:1rem 0.9rem;">
+                        {% if doc.document_file %}
+                            <button data-url="{{ url_for('preview_gso_file', doc_id=doc.id) }}" class="preview-btn" style="background:linear-gradient(135deg,#4CAF50 0%,#45a049 100%);color:#fff;border:none;border-radius:8px;padding:0.5rem 1rem;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(76,175,80,0.3);" title="Preview Document">
+                                <span style="margin-right:0.3rem;">👁️</span>Preview
+                            </button>
+                        {% else %}
+                            <span style="color:#999;font-style:italic;">No file</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="padding:2.2rem;text-align:center;color:#888;">No documents found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+<!-- Daily Documents Table (hidden by default) -->
+<div id="gso-daily-table-card" style="display:none;background:#fff;padding:3.5rem 3.5rem 2.5rem 3.5rem;border-radius:22px;box-shadow:0 4px 24px #6a82fb33;max-width:1600px;width:98vw;margin:auto;">
+    <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:1.2rem;text-align:left;">Today's GSO Documents</h2>
+    <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1.2rem;">
+        <input type="text" id="searchSupplierDaily" placeholder="Search Supplier..." style="padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid #6a82fb;font-size:1.08rem;min-width:220px;">
+    </div>
+    <div style="max-height:420px;overflow-y:auto;">
+        <table id="dailyGsoTable" style="width:100%;border-collapse:separate;border-spacing:0 0.5rem;font-size:1.18rem;background:#f7fbff;border-radius:14px;overflow:hidden;">
+            <thead>
+                <tr style="background:#f7fbff;font-size:1.09rem;color:#6a82fb;">
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Date</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Supplier</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Office</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Amount</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:200px;word-break:break-word;white-space:normal;">Forwarded To</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Document</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Preview</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in gso_docs_daily %}
+                <tr style="border-top:1px solid #f0f0f0;background:#fff;">
+                    <td style="padding:1rem 0.9rem;">{{ doc.date }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">{{ doc.supplier_name }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.office }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.amount }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:200px;word-break:break-word;white-space:normal;">{{ doc.forwarded_to }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">
+                        {% if doc.document_file %}
+                            <span style="color:#6a82fb;font-weight:600;">{{ doc.document_file }}</span>
+                        {% else %}No file{% endif %}
+                    </td>
+                    <td style="padding:1rem 0.9rem;">
+                        {% if doc.document_file %}
+                            <button data-url="{{ url_for('preview_gso_file', doc_id=doc.id) }}" class="preview-btn" style="background:linear-gradient(135deg,#4CAF50 0%,#45a049 100%);color:#fff;border:none;border-radius:8px;padding:0.5rem 1rem;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(76,175,80,0.3);" title="Preview Document">
+                                <span style="margin-right:0.3rem;">👁️</span>Preview
+                            </button>
+                        {% else %}
+                            <span style="color:#999;font-style:italic;">No file</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="padding:2.2rem;text-align:center;color:#888;">No documents found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- Monthly GSO Documents Modal -->
+<div id="monthlyGsoModal" style="display:none;position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(80,110,255,0.10);align-items:center;justify-content:center;">
+    <div style="background:#fff;max-width:1600px;width:95vw;padding:3.5rem 3.5rem 2.5rem 3.5rem;border-radius:22px;box-shadow:0 8px 40px #6a82fb33;position:relative;animation:popIn 0.25s cubic-bezier(.4,2,.6,1);max-height:90vh;overflow-y:auto;">
+        <button onclick="closeMonthlyGsoModal()" style="position:absolute;top:18px;right:18px;background:none;border:none;font-size:1.5rem;color:#6a82fb;cursor:pointer;">&times;</button>
+    <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:1.2rem;text-align:left;">This Month's GSO Documents</h2>
+    <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1.2rem;">
+        <input type="text" id="searchSupplierMonthly" placeholder="Search Supplier..." style="padding:0.6rem 1.2rem;border-radius:8px;border:1.5px solid #6a82fb;font-size:1.08rem;min-width:220px;">
+    </div>
+        <div style="max-height:60vh;overflow-y:auto;">
+        <table id="monthlyGsoTable" style="width:100%;border-collapse:separate;border-spacing:0 0.5rem;font-size:1.18rem;background:#f7fbff;border-radius:14px;overflow:hidden;">
+            <thead>
+                <tr style="background:#f7fbff;font-size:1.09rem;color:#6a82fb;">
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Date</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Supplier</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Office</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:120px;word-break:break-word;white-space:normal;">Amount</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:200px;word-break:break-word;white-space:normal;">Forwarded To</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;max-width:180px;word-break:break-word;white-space:normal;">Document</th>
+                    <th style="padding:1.1rem 0.9rem;text-align:left;">Preview</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in gso_docs_monthly %}
+                <tr style="border-top:1px solid #f0f0f0;background:#fff;">
+                    <td style="padding:1rem 0.9rem;">{{ doc.date }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">{{ doc.supplier_name }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.office }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:120px;word-break:break-word;white-space:normal;">{{ doc.amount }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:200px;word-break:break-word;white-space:normal;">{{ doc.forwarded_to }}</td>
+                    <td style="padding:1rem 0.9rem;max-width:180px;word-break:break-word;white-space:normal;">
+                        {% if doc.document_file %}
+                            <span style="color:#6a82fb;font-weight:600;">{{ doc.document_file }}</span>
+                        {% else %}No file{% endif %}
+                    </td>
+                    <td style="padding:1rem 0.9rem;">
+                        {% if doc.document_file %}
+                            <button data-url="{{ url_for('preview_gso_file', doc_id=doc.id) }}" class="preview-btn" style="background:linear-gradient(135deg,#4CAF50 0%,#45a049 100%);color:#fff;border:none;border-radius:8px;padding:0.5rem 1rem;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(76,175,80,0.3);" title="Preview Document">
+                                <span style="margin-right:0.3rem;">👁️</span>Preview
+                            </button>
+                        {% else %}
+                            <span style="color:#999;font-style:italic;">No file</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="padding:2.2rem;text-align:center;color:#888;">No documents found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var dateInput = document.getElementById('date');
+    if (dateInput) {
+        var today = new Date();
+        var yyyy = today.getFullYear();
+        var mm = String(today.getMonth() + 1).padStart(2, '0');
+        var dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = yyyy + '-' + mm + '-' + dd;
+    }
+    
+    // Form popup functionality
+    const openGsoFormBtn = document.getElementById('openGsoFormBtn');
+    const gsoFormModal = document.getElementById('gsoFormModal');
+    
+    openGsoFormBtn.addEventListener('click', function() {
+        gsoFormModal.style.display = 'flex';
+    });
+    
+    // Records buttons functionality
+    const showAllDocumentsBtn = document.getElementById('showAllDocumentsBtn');
+    const showMonthlyRecordsBtn = document.getElementById('showMonthlyRecordsBtn');
+    const allGsoModal = document.getElementById('allGsoModal');
+    const monthlyGsoModal = document.getElementById('monthlyGsoModal');
+    
+    showAllDocumentsBtn.addEventListener('click', function() {
+        allGsoModal.style.display = 'flex';
+    });
+    
+    showMonthlyRecordsBtn.addEventListener('click', function() {
+        monthlyGsoModal.style.display = 'flex';
+    });
+    
+    // Date range filter functionality for All Documents
+    const startDateFilter = document.getElementById('startDateFilter');
+    const endDateFilter = document.getElementById('endDateFilter');
+    const filterBtn = document.getElementById('filterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const allGsoTable = document.getElementById('allGsoTable');
+    
+    function filterByDateRange() {
+        const startDate = startDateFilter.value;
+        const endDate = endDateFilter.value;
+        const rows = allGsoTable.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const rowDate = row.getAttribute('data-date');
+            if (!startDate && !endDate) {
+                row.style.display = '';
+            } else if (startDate && endDate) {
+                if (rowDate >= startDate && rowDate <= endDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (startDate) {
+                if (rowDate >= startDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (endDate) {
+                if (rowDate <= endDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    function clearDateFilter() {
+        startDateFilter.value = '';
+        endDateFilter.value = '';
+        const rows = allGsoTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.style.display = '';
+        });
+    }
+    
+    filterBtn.addEventListener('click', filterByDateRange);
+    clearFilterBtn.addEventListener('click', clearDateFilter);
+    
+    // Preview button functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('preview-btn') || e.target.closest('.preview-btn')) {
+            const button = e.target.classList.contains('preview-btn') ? e.target : e.target.closest('.preview-btn');
+            const url = button.getAttribute('data-url');
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+    });
+});
+
+function closeGsoFormModal() {
+    document.getElementById('gsoFormModal').style.display = 'none';
+}
+
+function closeAllGsoModal() {
+    document.getElementById('allGsoModal').style.display = 'none';
+}
+
+function closeMonthlyGsoModal() {
+    document.getElementById('monthlyGsoModal').style.display = 'none';
+}
+
+function showFileName(input) {
+    var fileName = input.files && input.files.length > 0 ? input.files[0].name : '';
+    document.getElementById('fileNameDisplay').textContent = fileName;
+}
+
+// Add CSS animations for success modal and buttons
+const style = document.createElement('style');
+style.textContent = `
+@keyframes popIn {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeInBg {
+  0% { background: rgba(80,110,255,0); }
+  100% { background: rgba(80,110,255,0.10); }
+}
+
+.animated-gso-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(.4,2,.6,1);
+}
+
+.animated-gso-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.animated-gso-btn:active {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.animated-gso-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.animated-gso-btn:hover::before {
+  left: 100%;
+}
+
+#openGsoFormBtn:hover {
+  background: linear-gradient(90deg,#5f6ee6 0%,#6a82fb 100%);
+  box-shadow: 0 8px 25px #6a82fb44;
+}
+
+#showAllDocumentsBtn:hover {
+  background: linear-gradient(90deg,#185a9d 0%,#43cea2 100%);
+  box-shadow: 0 8px 25px #43cea244;
+}
+
+#showMonthlyRecordsBtn:hover {
+  background: linear-gradient(90deg,#6a82fb 0%,#8f6ed5 100%);
+  box-shadow: 0 8px 25px #8f6ed544;
+}
+
+.preview-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(.4,2,.6,1);
+}
+
+.preview-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+  background: linear-gradient(135deg,#45a049 0%,#4CAF50 100%);
+}
+
+.preview-btn:active {
+  transform: translateY(0) scale(1.02);
+  box-shadow: 0 3px 12px rgba(76,175,80,0.3);
+}
+
+.preview-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.preview-btn:hover::before {
+  left: 100%;
+}
+`;
+document.head.appendChild(style);
+
+
+
+// All GSO Documents search
+const searchAll = document.getElementById('searchSupplierAll');
+if (searchAll) {
+    searchAll.addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#allGsoTable tbody tr');
+        rows.forEach(row => {
+            const supplierCell = row.children[1];
+            if (!filter || (supplierCell && supplierCell.textContent.toLowerCase().includes(filter))) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Daily GSO Documents search
+const searchDaily = document.getElementById('searchSupplierDaily');
+if (searchDaily) {
+    searchDaily.addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#dailyGsoTable tbody tr');
+        rows.forEach(row => {
+            const supplierCell = row.children[1];
+            if (!filter || (supplierCell && supplierCell.textContent.toLowerCase().includes(filter))) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Monthly GSO Documents search
+const searchMonthly = document.getElementById('searchSupplierMonthly');
+if (searchMonthly) {
+    searchMonthly.addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#monthlyGsoTable tbody tr');
+        rows.forEach(row => {
+            const supplierCell = row.children[1];
+            if (!filter || (supplierCell && supplierCell.textContent.toLowerCase().includes(filter))) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,1586 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'add_document' %}
+{% block title %}Add Document{% endblock %}
+{% block header_title %}Add Document{% endblock %}
+{% block content %}
+
+<style>
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+    .documents-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        padding: 0 1rem;
+    }
+
+    /* Header Section */
+    .header-section {
+    background: #fff;
+    border-radius: var(--border-radius);
+        padding: 2rem;
+    box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+    .header-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #333;
+    margin: 0;
+}
+
+.search-container {
+    position: relative;
+        min-width: 300px;
+}
+
+.search-input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 3rem;
+        border: 2px solid #e2e8f0;
+    border-radius: 12px;
+        font-size: 1rem;
+    transition: var(--transition);
+        background: #f8fafc;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #667eea;
+        font-size: 1.1rem;
+}
+
+.add-document-btn {
+    background: var(--primary-gradient);
+        color: white;
+        border: none;
+    border-radius: 12px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        text-decoration: none;
+}
+
+.add-document-btn:hover {
+    transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Documents Table Section */
+    .table-section {
+    background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .table-header {
+    display: flex;
+    align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .table-title {
+        font-size: 1.3rem;
+    font-weight: 700;
+        color: #333;
+        margin: 0;
+    display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .table-icon {
+        width: 40px;
+        height: 40px;
+    border-radius: 12px;
+        background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .table-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+    .table-count {
+    background: var(--primary-gradient);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+.table-container {
+        background: #f8fafc;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        max-height: 600px;
+    overflow-y: auto;
+}
+
+.documents-table {
+    width: 100%;
+    border-collapse: collapse;
+        font-size: 0.9rem;
+}
+
+.documents-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.documents-table th {
+        padding: 1rem;
+    text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .documents-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+    transition: var(--transition);
+}
+
+.documents-table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .documents-table td {
+        padding: 1rem;
+        color: #4a5568;
+        vertical-align: middle;
+    }
+
+    .document-link {
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .document-link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .action-button {
+        background: var(--primary-gradient);
+        color: white;
+    border: none;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-button.edit {
+    background: var(--success-gradient);
+        box-shadow: 0 2px 8px rgba(67, 233, 123, 0.3);
+}
+
+    .action-button.edit:hover {
+        box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+}
+
+    /* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+        flex-wrap: wrap;
+}
+
+.pagination-info {
+    color: #666;
+        font-size: 0.9rem;
+    font-weight: 500;
+}
+
+    .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+    .pagination-button {
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+        font-weight: 600;
+    cursor: pointer;
+        transition: var(--transition);
+        color: #4a5568;
+        text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+    .pagination-button:hover {
+    border-color: #667eea;
+        color: #667eea;
+    transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+    .pagination-button.active {
+    background: var(--primary-gradient);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+        backdrop-filter: blur(10px);
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-overlay.show {
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+        width: 90vw;
+        max-height: 88vh;
+        overflow-y: auto;
+        transform: scale(0.7) translateY(-30px) rotateX(5deg);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-overlay.show .modal-content {
+        transform: scale(1) translateY(0) rotateX(0deg);
+        opacity: 1;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2.5rem 3rem 2rem 3rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px 24px 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modal-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .modal-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: white;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .modal-title::before {
+        content: '📄';
+        font-size: 1.8rem;
+    }
+
+    .modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        padding: 0;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-body {
+        padding: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .form-group {
+        margin-bottom: 0.6rem;
+        position: relative;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2d3748;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        display: block;
+        position: relative;
+        padding-left: 0.8rem;
+    }
+
+    .form-label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .form-input, .form-textarea, .form-select {
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(102, 126, 234, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .form-input:hover, .form-textarea:hover, .form-select:hover {
+        border-color: #cbd5e0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 50px;
+        resize: vertical;
+        line-height: 1.3;
+    }
+
+    .file-upload-area {
+        border: 3px dashed #667eea;
+        border-radius: 10px;
+        padding: 1.2rem 0.8rem;
+        text-align: center;
+        background: linear-gradient(135deg, #f7fbff 0%, #f0f4ff 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .file-upload-area::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+        border-color: #764ba2;
+        background: linear-gradient(135deg, #f0f4ff 0%, #e6f3ff 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    }
+
+    .file-upload-area:hover::before {
+        opacity: 1;
+    }
+
+    .file-upload-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 0.8rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .file-upload-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .file-upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    }
+
+    .file-upload-btn:hover::before {
+        left: 100%;
+    }
+
+    .file-upload-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:hover::before {
+        left: 100%;
+    }
+
+    .submit-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Toastification System */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 300px;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast.success {
+        border-left-color: #43e97b;
+        background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+    }
+
+    .toast.error {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    }
+
+    .toast.info {
+        border-left-color: #4facfe;
+        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    }
+
+    .toast.warning {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .toast.success .toast-icon {
+        background: #43e97b;
+        color: white;
+    }
+
+    .toast.error .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast.info .toast-icon {
+        background: #4facfe;
+        color: white;
+    }
+
+    .toast.warning .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+        color: #2d3748;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+        color: #4a5568;
+        line-height: 1.4;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #a0aec0;
+        cursor: pointer;
+        padding: 0.2rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 1.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #4a5568;
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 12px 12px;
+        transition: width linear;
+    }
+
+    .toast.success .toast-progress {
+        background: #43e97b;
+    }
+
+    .toast.error .toast-progress {
+        background: #fa709a;
+    }
+
+    .toast.info .toast-progress {
+        background: #4facfe;
+    }
+
+    .toast.warning .toast-progress {
+        background: #fa709a;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        display: none;
+    position: fixed;
+    top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .header-left {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .search-container {
+            min-width: auto;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .documents-table {
+            font-size: 0.8rem;
+        }
+        
+        .documents-table th,
+        .documents-table td {
+            padding: 0.7rem 0.5rem;
+        }
+        
+        .pagination-container {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .modal-content {
+            width: 95vw;
+            margin: 1rem;
+            border-radius: 16px;
+        }
+        
+        .modal-header {
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.4rem;
+        }
+        
+        .form-label {
+            font-size: 0.9rem;
+            padding-left: 1.2rem;
+        }
+        
+        .form-label::before {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            padding: 0.9rem 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .file-upload-area {
+            padding: 2rem 1.5rem;
+        }
+        
+        .submit-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .header-title {
+            font-size: 1.5rem;
+        }
+        
+        .documents-table {
+            font-size: 0.75rem;
+        }
+        
+        .documents-table th,
+        .documents-table td {
+            padding: 0.5rem 0.3rem;
+    }
+}
+</style>
+
+<div class="documents-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="header-left">
+            <div class="header-icon">📄</div>
+            <div>
+                <h2 class="header-title">Documents Management</h2>
+                <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 1rem;">Add, view, and manage your documents</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div class="search-container">
+                <span class="search-icon"></span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search Control #, Source, or Particulars...">
+    </div>
+            <button id="openAddModal" class="add-document-btn">
+                <span>➕</span>
+                <span>Add Document</span>
+            </button>
+                    </div>
+                    </div>
+
+    <!-- Documents Table Section -->
+    <div class="table-section">
+        <div class="table-header">
+            <div>
+                <h3 class="table-title">
+                    <div class="table-icon">📋</div>
+                    All Documents
+                </h3>
+                <div class="table-info">
+                    Showing <span class="table-count">{{ documents|length }}</span> documents
+                    {% if total_documents != documents|length %}
+                        of {{ total_documents }} total
+                    {% endif %}
+                </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+            <table class="documents-table">
+            <thead>
+                <tr>
+                    <th>Date Received</th>
+                    <th>Control #</th>
+                    <th>Source</th>
+                    <th>Document</th>
+                    <th>Preview</th>
+                        <th>Actions</th>
+                </tr>
+            </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.date_received }}</td>
+                        <td>{{ doc.control_no }}</td>
+                        <td>{{ doc.source }}</td>
+                        <td>
+                            {% if doc.document_file %}
+                                <a href="{{ url_for('download_receiving1_file', doc_id=doc.id) }}" class="document-link" target="_blank">
+                                    {{ doc.document_file }}
+                                </a>
+                            {% else %}
+                                <span style="color: #999;">No file</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.document_file %}
+                                <a href="{{ url_for('preview_receiving1_file', doc_id=doc.id) }}" class="action-button" target="_blank">
+                                    <span>👁️</span>
+                                    <span>View</span>
+                                </a>
+                            {% else %}
+                                <span style="color: #999;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="action-button view-details-btn" 
+                                   data-id="{{ doc.id }}"
+                                   data-date="{{ doc.date_received }}"
+                                   data-time="{{ doc.time_received if doc.time_received is defined else '' }}"
+                                   data-control="{{ doc.control_no }}"
+                                   data-source="{{ doc.source }}"
+                                   data-particulars="{{ doc.particulars if doc.particulars is defined else '' }}"
+                                   data-received="{{ doc.received_by if doc.received_by is defined else '' }}"
+                                   data-document-receiver="{{ doc.document_receiver if doc.document_receiver is defined else '' }}"
+                                   data-forwarded="{{ doc.forwarded_to if doc.forwarded_to is defined else '' }}"
+                                   data-file="{{ doc.document_file if doc.document_file is defined else '' }}"
+                                   data-created="{{ doc.created_at if doc.created_at is defined else '' }}">
+                                    <span>🔍</span>
+                                    <span>Details</span>
+                                </button>
+                                <button class="action-button edit edit-document-btn" data-id="{{ doc.id }}">
+                                    <span>✏️</span>
+                                    <span>Edit</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #666;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">No Documents Found</div>
+                            <div>Start by adding your first document using the "Add Document" button.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+</div>
+    
+        <!-- Pagination -->
+    {% if total_pages > 1 %}
+        <div class="pagination-container">
+        <div class="pagination-info">
+                Page {{ page }} of {{ total_pages }}
+        </div>
+        
+            <div class="pagination-controls">
+            {% if has_prev %}
+                <a href="{{ url_for('receiving1_add_document', page=page-1) }}" class="pagination-button">
+                    <span>←</span>
+                    <span>Previous</span>
+                </a>
+            {% else %}
+                <button class="pagination-button" disabled>
+                    <span>←</span>
+                    <span>Previous</span>
+                </button>
+            {% endif %}
+            
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <span class="pagination-button active">{{ p }}</span>
+                    {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                        <a href="{{ url_for('receiving1_add_document', page=p) }}" class="pagination-button">
+                            {{ p }}
+                        </a>
+                    {% elif p == 4 and page > 5 %}
+                        <span style="color: #6c757d; padding: 0.6rem 0.3rem;">...</span>
+                    {% elif p == total_pages - 3 and page < total_pages - 4 %}
+                        <span style="color: #6c757d; padding: 0.6rem 0.3rem;">...</span>
+                    {% endif %}
+                {% endfor %}
+            
+            {% if has_next %}
+                <a href="{{ url_for('receiving1_add_document', page=page+1) }}" class="pagination-button">
+                    <span>Next</span>
+                    <span>→</span>
+                </a>
+            {% else %}
+                <button class="pagination-button" disabled>
+                    <span>Next</span>
+                    <span>→</span>
+                </button>
+            {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+        </div>
+        
+<!-- Add Document Modal -->
+<div id="addModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add New Document</h3>
+            <button class="modal-close" onclick="closeAddModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="post" enctype="multipart/form-data" autocomplete="off" id="addDocumentForm" style="position: relative;">
+                <!-- Form Header -->
+                <div style="text-align: center; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 2px solid #f1f5f9;">
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #2d3748; margin-bottom: 0.15rem;">📋 Document Information</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">Please fill in all required fields to add a new document</div>
+                </div>
+                
+                <!-- Single Column Layout -->
+                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date Received</label>
+                            <input type="date" name="date_received" id="dateReceivedInput" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time Received</label>
+                            <input type="text" name="time_received" id="timeReceivedInput" class="form-input" placeholder="e.g., 4:03 pm, 16:03, or any format">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Control #</label>
+                            <input type="text" name="control_no" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Source</label>
+                            <input type="text" name="source" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Particulars</label>
+                        <textarea name="particulars" class="form-textarea" style="min-height: 50px;"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Received By</label>
+                            <input type="text" name="received_by" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Document Receiver</label>
+                            <input type="text" name="document_receiver" class="form-input" placeholder="">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Forwarded To</label>
+                        <input type="text" name="forwarded_to" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="route_receiving2" style="width: 1.2em; height: 1.2em; accent-color: #667eea;">
+                            <span class="form-label" style="margin: 0;">Route to Admin Receiving</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Attach Document</label>
+                        <div class="file-upload-area" style="height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            <input type="file" name="document_file" id="documentFileInput" style="display: none;" required>
+                            <button type="button" class="file-upload-btn" onclick="document.getElementById('documentFileInput').click();">
+                                <span style="font-size: 1.1rem;">📁</span>
+                                <span>Choose File</span>
+                            </button>
+                            <div style="margin-top: 0.5rem; text-align: center;">
+                                <div id="selectedFileName" style="color:#667eea;font-size:0.8rem;font-weight:600;"></div>
+                            </div>
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.15rem; text-align: center;">
+                                Supported formats: PDF, JPG, PNG, DOC, DOCX
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Section -->
+                <div style="margin-top: 1.2rem; padding-top: 0.8rem; border-top: 2px solid #f1f5f9;">
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span style="margin-right: 0.5rem;">✅</span>
+                        Add Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Document Details Modal -->
+<div id="detailsModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Document Details</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="detailsContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Document Modal -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Document</h3>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editDocumentForm" enctype="multipart/form-data" autocomplete="off">
+            <input type="hidden" id="editDocId" name="doc_id">
+            <div class="form-row">
+                <div class="form-group">
+                        <label class="form-label">Date Received</label>
+                        <input type="date" name="date_received" id="editDateReceived" class="form-input" required>
+                </div>
+                <div class="form-group">
+                        <label class="form-label">Time Received</label>
+                        <input type="text" name="time_received" id="editTimeReceived" class="form-input" placeholder="e.g., 4:03 pm, 16:03, or any format">
+                </div>
+            </div>
+                
+            <div class="form-row">
+                <div class="form-group">
+                        <label class="form-label">Control #</label>
+                        <input type="text" name="control_no" id="editControlNo" class="form-input" required>
+                </div>
+                <div class="form-group">
+                        <label class="form-label">Source</label>
+                    <input type="text" name="source" id="editSource" class="form-input">
+                </div>
+            </div>
+                
+            <div class="form-group">
+                    <label class="form-label">Particulars</label>
+                <textarea name="particulars" id="editParticulars" class="form-textarea"></textarea>
+            </div>
+                
+            <div class="form-row">
+                <div class="form-group">
+                        <label class="form-label">Received By</label>
+                    <input type="text" name="received_by" id="editReceivedBy" class="form-input">
+                </div>
+                <div class="form-group">
+                        <label class="form-label">Document Receiver</label>
+                        <input type="text" name="document_receiver" id="editDocumentReceiver" class="form-input">
+                </div>
+            </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Forwarded To</label>
+                    <input type="text" name="forwarded_to" id="editForwardedTo" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" name="route_receiving2" id="editRouteReceiving2" style="width: 1.2em; height: 1.2em; accent-color: #667eea;">
+                        <span class="form-label" style="margin: 0;">Route to Admin Receiving</span>
+                    </label>
+                </div>
+                
+            <div class="form-group">
+                    <label class="form-label">Update Document (Optional)</label>
+                    <div class="file-upload-area">
+                        <input type="file" name="document_file" id="editDocumentFile" style="display: none;">
+                        <button type="button" class="file-upload-btn" onclick="document.getElementById('editDocumentFile').click()">
+                            Choose New File
+                        </button>
+                        <div id="editSelectedFileName" style="color: #666; font-size: 0.9rem;"></div>
+                        <div id="currentFileName" style="color: #667eea; font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;"></div>
+                </div>
+            </div>
+                
+                <button type="submit" class="submit-btn">
+                    Update Document
+                </button>
+        </form>
+    </div>
+</div>
+</div>
+
+<!-- Toastification Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Success Toast Trigger -->
+{% if success == '1' %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showToast('success', 'Document Added Successfully!', 'Your document was successfully added to the system.');
+    });
+</script>
+{% endif %}
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<script>
+// Modal functions
+function openAddModal() {
+    document.getElementById('addModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('addModal').classList.add('show');
+    }, 10);
+    fillDateTime();
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('addModal').style.display = 'none';
+    }, 300);
+}
+
+function openDetailsModal() {
+    document.getElementById('detailsModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('detailsModal').classList.add('show');
+    }, 10);
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('detailsModal').style.display = 'none';
+    }, 300);
+}
+
+function openEditModal() {
+    document.getElementById('editModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('editModal').classList.add('show');
+    }, 10);
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('editModal').style.display = 'none';
+    }, 300);
+}
+
+// Toastification System
+function showToast(type, title, message, duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    toast.className = `toast ${type}`;
+    toast.id = toastId;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type]}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="removeToast('${toastId}')">&times;</button>
+        <div class="toast-progress"></div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            removeToast(toastId);
+        }, duration);
+        
+        // Progress bar animation
+        const progress = toast.querySelector('.toast-progress');
+        progress.style.width = '100%';
+        progress.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 10);
+    }
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 400);
+    }
+}
+
+// Clear success parameter from URL
+function clearSuccessParameter() {
+    if (window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('success');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+}
+
+// Fill current date and time
+function fillDateTime() {
+    const now = new Date();
+    document.getElementById('dateReceivedInput').value = now.toISOString().slice(0, 10);
+    
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const timeString = `${formattedHours}:${formattedMinutes} ${ampm}`;
+    
+    document.getElementById('timeReceivedInput').value = timeString;
+}
+
+// File input handlers
+document.getElementById('documentFileInput').addEventListener('change', function(e) {
+    const fileName = e.target.files.length ? e.target.files[0].name : '';
+    document.getElementById('selectedFileName').textContent = fileName;
+});
+
+document.getElementById('editDocumentFile').addEventListener('change', function(e) {
+    const fileName = e.target.files.length ? e.target.files[0].name : '';
+    document.getElementById('editSelectedFileName').textContent = fileName;
+});
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.documents-table tbody tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        let found = false;
+        
+        cells.forEach(cell => {
+            if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                found = true;
+            }
+        });
+        
+        row.style.display = found ? '' : 'none';
+        });
+    });
+
+// View details functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.view-details-btn')) {
+        const btn = e.target.closest('.view-details-btn');
+        const data = {
+            id: btn.getAttribute('data-id'),
+            date: btn.getAttribute('data-date'),
+            time: btn.getAttribute('data-time'),
+            control: btn.getAttribute('data-control'),
+            source: btn.getAttribute('data-source'),
+            particulars: btn.getAttribute('data-particulars'),
+            received: btn.getAttribute('data-received'),
+            documentReceiver: btn.getAttribute('data-document-receiver'),
+            forwarded: btn.getAttribute('data-forwarded'),
+            file: btn.getAttribute('data-file'),
+            created: btn.getAttribute('data-created')
+        };
+        
+        const content = `
+            <div style="display: grid; gap: 1rem;">
+                <div><strong>ID:</strong> ${data.id}</div>
+                <div><strong>Date Received:</strong> ${data.date}</div>
+                <div><strong>Time:</strong> ${data.time || 'N/A'}</div>
+                <div><strong>Control #:</strong> ${data.control}</div>
+                <div><strong>Source:</strong> ${data.source}</div>
+                <div><strong>Particulars:</strong> ${data.particulars || 'N/A'}</div>
+                <div><strong>Received By:</strong> ${data.received || 'N/A'}</div>
+                <div><strong>Document Receiver:</strong> ${data.documentReceiver || 'N/A'}</div>
+                <div><strong>Forwarded To:</strong> ${data.forwarded || 'N/A'}</div>
+                <div><strong>Document File:</strong> ${data.file || 'No file'}</div>
+                <div><strong>Created At:</strong> ${data.created}</div>
+            </div>
+        `;
+        
+        document.getElementById('detailsContent').innerHTML = content;
+        openDetailsModal();
+    }
+});
+
+// Edit functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.edit-document-btn')) {
+        const btn = e.target.closest('.edit-document-btn');
+        const docId = btn.getAttribute('data-id');
+        loadDocumentForEdit(docId);
+    }
+});
+
+function loadDocumentForEdit(docId) {
+    fetch(`/receiving1/edit/${docId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const doc = data.document;
+                document.getElementById('editDocId').value = doc.id;
+                document.getElementById('editDateReceived').value = doc.date_received;
+                
+                let displayTime = doc.time_received;
+                if (doc.time_received && doc.time_received.match(/^\d{2}:\d{2}:\d{2}$/)) {
+                            const [hours, minutes] = doc.time_received.split(':');
+                            const hour = parseInt(hours);
+                            const ampm = hour >= 12 ? 'pm' : 'am';
+                            const displayHour = hour % 12 || 12;
+                            displayTime = `${displayHour}:${minutes} ${ampm}`;
+                }
+                
+                document.getElementById('editTimeReceived').value = displayTime;
+                document.getElementById('editControlNo').value = doc.control_no;
+                document.getElementById('editSource').value = doc.source;
+                document.getElementById('editParticulars').value = doc.particulars;
+                document.getElementById('editReceivedBy').value = doc.received_by;
+                document.getElementById('editDocumentReceiver').value = doc.document_receiver;
+                document.getElementById('editForwardedTo').value = doc.forwarded_to;
+                document.getElementById('editRouteReceiving2').checked = doc.routed_to_receiving2 == 1;
+                document.getElementById('currentFileName').textContent = doc.document_file || 'No file attached';
+                document.getElementById('editSelectedFileName').textContent = '';
+                
+                openEditModal();
+            } else {
+                showToast('error', 'Load Failed', data.message || 'Error loading document data');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Load Failed', 'An error occurred while loading document data');
+        });
+}
+
+// Form submissions
+document.getElementById('addDocumentForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+});
+
+document.getElementById('editDocumentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const docId = document.getElementById('editDocId').value;
+
+    fetch(`/receiving1/edit/${docId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeEditModal();
+            showToast('success', 'Document Updated!', 'Your document was successfully updated.');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast('error', 'Update Failed', data.message || 'Error updating document');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Update Failed', 'An error occurred while updating the document');
+    });
+});
+
+// Event listeners
+document.getElementById('openAddModal').addEventListener('click', function(e) {
+    e.preventDefault();
+    openAddModal();
+});
+
+// Close modals when clicking outside
+window.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('show');
+        setTimeout(() => {
+            e.target.style.display = 'none';
+        }, 300);
+    }
+});
+
+// Clear success parameter after showing toast
+if (window.location.search.includes('success=1')) {
+    setTimeout(clearSuccessParameter, 1000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAddModal();
+        closeDetailsModal();
+        closeEditModal();
+    }
+});
+</script>
+
+{% endblock %} 

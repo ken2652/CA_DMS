@@ -1,0 +1,777 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'reports' %}
+{% block title %}Admin Reports - All Records{% endblock %}
+{% block header_title %}Comprehensive Reports{% endblock %}
+
+<!-- Bootstrap CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+{% block content %}
+
+<style>
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --accent-color: #4facfe;
+        --success-color: #43e97b;
+        --warning-color: #fa709a;
+        --border-radius: 15px;
+        --transition: all 0.3s ease;
+    }
+
+    .reports-container {
+        padding: 1rem;
+    }
+
+    /* Stats Overview Cards */
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-overview-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .stat-overview-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-overview-card.receiving1 { border-left-color: var(--primary-color); }
+    .stat-overview-card.receiving2 { border-left-color: var(--secondary-color); }
+    .stat-overview-card.releasing { border-left-color: var(--accent-color); }
+    .stat-overview-card.docs { border-left-color: var(--success-color); }
+
+    .stat-overview-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-overview-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .stat-overview-info h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--primary-color);
+    }
+
+    .stat-overview-info p {
+        margin: 0.25rem 0 0 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .filter-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+
+    .filter-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.85rem;
+    }
+
+    .filter-input, .filter-select {
+        padding: 0.6rem 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .filter-input:focus, .filter-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-button {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .filter-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    /* Records Table */
+    .records-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .records-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .records-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .records-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: white;
+    }
+
+    .records-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: #666;
+        font-size: 0.85rem;
+    }
+
+    .records-count {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .table-container {
+        background: #f8f9fa;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .records-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .records-table thead {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .records-table th {
+        padding: 0.8rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    .records-table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+        transition: var(--transition);
+    }
+
+    .records-table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .records-table td {
+        padding: 0.8rem;
+        color: #495057;
+        vertical-align: top;
+    }
+
+    .record-type {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: white;
+    }
+
+    .record-type.receiving1 { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+    .record-type.receiving2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .record-type.releasing { background: linear-gradient(135deg, var(--accent-color), #00f2fe); }
+    .record-type.docs { background: linear-gradient(135deg, var(--success-color), #38f9d7); }
+
+    .document-link {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .document-link:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+    }
+
+    .action-button {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        text-decoration: none;
+        margin: 0.1rem;
+    }
+
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pagination-button {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .pagination-button:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.1);
+    }
+
+    .pagination-button.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Loading States */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-controls {
+            grid-template-columns: 1fr;
+        }
+        
+        .records-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .records-table {
+            font-size: 0.75rem;
+        }
+        
+        .records-table th,
+        .records-table td {
+            padding: 0.6rem 0.4rem;
+        }
+        
+        .pagination-container {
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stat-overview-card {
+            padding: 1rem;
+        }
+        
+        .stat-overview-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .records-table {
+            font-size: 0.7rem;
+        }
+        
+        .records-table th,
+        .records-table td {
+            padding: 0.4rem 0.2rem;
+        }
+    }
+</style>
+
+<div class="reports-container">
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+        <div class="stat-overview-card receiving1">
+            <div class="stat-overview-content">
+                <div class="stat-overview-icon">📨</div>
+                <div class="stat-overview-info">
+                    <h3>{{ total_receiving1 }}</h3>
+                    <p>Receiving Documents</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-overview-card receiving2">
+            <div class="stat-overview-content">
+                <div class="stat-overview-icon">📤</div>
+                <div class="stat-overview-info">
+                    <h3>{{ total_receiving2 }}</h3>
+                    <p>Admin Receiving</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-overview-card releasing">
+            <div class="stat-overview-content">
+                <div class="stat-overview-icon">📋</div>
+                <div class="stat-overview-info">
+                    <h3>{{ total_releasing }}</h3>
+                    <p>Releasing Documents</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-overview-card docs">
+            <div class="stat-overview-content">
+                <div class="stat-overview-icon">📁</div>
+                <div class="stat-overview-info">
+                    <h3>{{ total_docs }}</h3>
+                    <p>Documentation Files</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-header">
+            <div class="filter-icon">🔍</div>
+            <h3 class="filter-title">Filter & Search Records</h3>
+        </div>
+        
+        <form method="GET" action="{{ url_for('admin_reports') }}" id="filterForm">
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label class="filter-label">Record Type</label>
+                    <select name="record_type" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="receiving1" {% if request.args.get('record_type') == 'receiving1' %}selected{% endif %}>Receiving </option>
+                        <option value="receiving2" {% if request.args.get('record_type') == 'receiving2' %}selected{% endif %}>Admin Receiving </option>
+                        <option value="releasing" {% if request.args.get('record_type') == 'releasing' %}selected{% endif %}>Releasing</option>
+                        <option value="docs" {% if request.args.get('record_type') == 'docs' %}selected{% endif %}>Documentation</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Date From</label>
+                    <input type="date" name="date_from" class="filter-input" value="{{ request.args.get('date_from', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Date To</label>
+                    <input type="date" name="date_to" class="filter-input" value="{{ request.args.get('date_to', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" name="search" class="filter-input" placeholder="Control #, Source, Particulars..." value="{{ request.args.get('search', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">&nbsp;</label>
+                    <button type="submit" class="filter-button">
+                        <span>🔍</span>
+                        <span>Apply Filters</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="records-section">
+        <div class="records-header">
+            <div>
+                <h3 class="records-title">
+                    <div class="records-icon">📊</div>
+                    All Records
+                </h3>
+                <div class="records-info">
+                    Showing <span class="records-count">{{ records|length }}</span> records
+                    {% if total_records != records|length %}
+                        of {{ total_records }} total
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="records-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Control #</th>
+                        <th>Source</th>
+                        <th>Particulars</th>
+                        <th>Received By</th>
+                        <th>Document</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>
+                            <span class="record-type {{ record.type }}">
+                                {{ record.type|upper }}
+                            </span>
+                        </td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.control_no }}</td>
+                        <td>{{ record.source }}</td>
+                        <td>{{ record.particulars[:50] }}{% if record.particulars|length > 50 %}...{% endif %}</td>
+                        <td>{{ record.received_by }}</td>
+                        <td>
+                            {% if record.document_file %}
+                                <a href="{{ record.download_url }}" class="document-link" target="_blank">
+                                    {{ record.document_file }}
+                                </a>
+                            {% else %}
+                                <span style="color: #999;">No file</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
+                                {% if record.preview_url %}
+                                <a href="{{ record.preview_url }}" class="action-button" target="_blank">
+                                    <span>👁️</span>
+                                    <span>View</span>
+                                </a>
+                                {% endif %}
+                                {% if record.download_url %}
+                                <a href="{{ record.download_url }}" class="action-button">
+                                    <span>⬇️</span>
+                                    <span>Download</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: #666;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">📭</div>
+                            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem;">No Records Found</div>
+                            <div>Try adjusting your filters or search criteria.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Page {{ current_page }} of {{ total_pages }}
+            </div>
+            
+            <div class="pagination-controls">
+                {% if current_page > 1 %}
+                <a href="{{ url_for('admin_reports', page=current_page-1, record_type=request.args.get('record_type', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), search=request.args.get('search', '')) }}" class="pagination-button">
+                    <span>←</span>
+                    <span>Previous</span>
+                </a>
+                {% else %}
+                <button class="pagination-button" disabled>
+                    <span>←</span>
+                    <span>Previous</span>
+                </button>
+                {% endif %}
+
+                {% for page_num in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+                <a href="{{ url_for('admin_reports', page=page_num, record_type=request.args.get('record_type', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), search=request.args.get('search', '')) }}" 
+                   class="pagination-button {% if page_num == current_page %}active{% endif %}">
+                    {{ page_num }}
+                </a>
+                {% endfor %}
+
+                {% if current_page < total_pages %}
+                <a href="{{ url_for('admin_reports', page=current_page+1, record_type=request.args.get('record_type', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), search=request.args.get('search', '')) }}" class="pagination-button">
+                    <span>Next</span>
+                    <span>→</span>
+                </a>
+                {% else %}
+                <button class="pagination-button" disabled>
+                    <span>Next</span>
+                    <span>→</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<script>
+// Performance optimizations
+document.addEventListener('DOMContentLoaded', function() {
+    // Show loading on form submission
+    document.getElementById('filterForm').addEventListener('submit', function() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    });
+
+    // Auto-submit form on select change for better UX
+    document.querySelectorAll('.filter-select, .filter-input').forEach(function(element) {
+        element.addEventListener('change', function() {
+            if (this.name === 'record_type' || this.name === 'date_from' || this.name === 'date_to') {
+                document.getElementById('filterForm').submit();
+            }
+        });
+    });
+
+    // Debounced search input with shorter delay
+    let searchTimeout;
+    document.querySelector('input[name="search"]').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            document.getElementById('filterForm').submit();
+        }, 300); // Reduced from 500ms to 300ms
+    });
+
+    // Optimized table scrolling
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+        tableContainer.addEventListener('scroll', function() {
+            // Add shadow effect when scrolled
+            if (this.scrollTop > 0) {
+                this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            } else {
+                this.style.boxShadow = 'none';
+            }
+        });
+    }
+
+    // Keyboard navigation for pagination
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            const prevButton = document.querySelector('.pagination-button:not([disabled])');
+            if (prevButton && prevButton.textContent.includes('Previous')) {
+                prevButton.click();
+            }
+        }
+        if (e.key === 'ArrowRight') {
+            const nextButton = document.querySelector('.pagination-button:not([disabled])');
+            if (nextButton && nextButton.textContent.includes('Next')) {
+                nextButton.click();
+            }
+        }
+    });
+
+    // Lazy loading for better performance
+    const observerOptions = {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe stat cards for smooth animation
+    document.querySelectorAll('.stat-overview-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+
+    // Auto-refresh data every 10 minutes (increased from 5 minutes)
+    setInterval(function() {
+        if (document.getElementById('loadingOverlay').style.display !== 'flex') {
+            location.reload();
+        }
+    }, 600000); // 10 minutes
+});
+</script>
+
+{% endblock %}

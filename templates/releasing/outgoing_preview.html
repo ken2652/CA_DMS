@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+{% block title %}Outgoing Preview{% endblock %}
+{% block header_title %}Outgoing Preview{% endblock %}
+{% block content %}
+<style>
+:root { --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --card-shadow: 0 8px 32px rgba(0,0,0,.08); --radius: 16px; }
+.preview-card { background:#fff; border-radius:var(--radius); box-shadow:var(--card-shadow); max-width:720px; margin:1.5rem auto; overflow:hidden; border:1px solid #eef2f7; }
+.card-header { padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eef2f7; }
+.back-btn { background:#eef2ff; color:#4f5bd5; text-decoration:none; font-weight:800; padding:.6rem 1rem; border-radius:10px; }
+.card-title { margin:0; font-size:1.15rem; font-weight:800; color:#1f2937; }
+.card-body { padding:1.5rem; }
+.detail { margin-bottom:1rem; padding:.8rem; background:#f8fafc; border-left:3px solid #667eea; border-radius:8px; }
+.label { font-weight:700; color:#667eea; font-size:.92rem; }
+.value { color:#374151; }
+.link { color:#667eea; text-decoration:none; font-weight:700; }
+.link:hover { text-decoration:underline; }
+</style>
+
+<div class="preview-card">
+    <div class="card-header">
+        <a class="back-btn" href="{{ url_for('releasing_outgoing_docs') }}">← Back</a>
+        <h3 class="card-title">Outgoing Document Details</h3>
+    </div>
+    <div class="card-body">
+        <div class="detail"><div class="label">Date</div><div class="value">{{ doc.date_sent }}</div></div>
+        <div class="detail"><div class="label">Time</div><div class="value">{{ doc.time_sent }}</div></div>
+        <div class="detail"><div class="label">Control #</div><div class="value">{{ doc.control_no }}</div></div>
+        <div class="detail"><div class="label">Source</div><div class="value">{{ doc.source }}</div></div>
+        <div class="detail"><div class="label">Particulars</div><div class="value">{{ doc.particulars }}</div></div>
+        <div class="detail"><div class="label">Forwarded To</div><div class="value">{{ doc.forwarded_to }}</div></div>
+        <div class="detail">
+            <div class="label">Document File</div>
+            <div class="value">
+                {% if doc.document_file %}
+                    <a class="link" href="{{ url_for('download_outgoing_file', doc_id=doc.id) }}">Download</a>
+                    &nbsp;|&nbsp;
+                    <a class="link" href="{{ url_for('preview_outgoing_file', doc_id=doc.id) }}" target="_blank">Preview File</a>
+                {% else %}No file attached{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

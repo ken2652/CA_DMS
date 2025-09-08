@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" href="/static/roxas_logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --sidebar-bg: linear-gradient(180deg, #1e3a8a 0%, #1e40af 50%, #1e3a8a 100%);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            overflow-x: hidden;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .sidebar-header {
+            padding: 2.5rem 2rem 2rem 2rem;
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(30, 64, 175, 0.2) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .sidebar-header .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 1rem 0 0 0;
+            background: linear-gradient(135deg, #fff 0%, #e3f2fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar-section-title {
+            margin: 2rem 0 1rem 2rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        .sidebar-section-title::before {
+            content: '';
+            position: absolute;
+            left: -1rem;
+            top: 50%;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1.5rem;
+        }
+
+        .sidebar-nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-radius: 15px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .sidebar-nav a:hover::before {
+            left: 100%;
+        }
+
+        .sidebar-nav a.active {
+            background: var(--primary-gradient) !important;
+            color: #fff !important;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .sidebar-nav a:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+            color: #fff !important;
+            transform: translateX(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .sidebar-nav a i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover i {
+            transform: scale(1.1);
+        }
+
+        .sidebar-user {
+            margin: 2rem 1.5rem 1rem 1.5rem;
+            padding: 1.5rem;
+            background: rgba(30, 58, 138, 0.2);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-user::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+        }
+
+        .sidebar-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-user-info .name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar-user-info .role {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .sidebar-logout {
+            margin: 0 1.5rem 2rem 1.5rem;
+            color: #fff;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+        }
+
+        .sidebar-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: transparent;
+            padding: 2rem;
+            min-width: 0;
+            margin-left: 320px;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .admin-header {
+            background: var(--primary-gradient);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2.5rem 3rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            min-height: 80px;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .admin-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 280px;
+            }
+            .main-content {
+                margin-left: 280px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100vw;
+                height: auto;
+                position: relative;
+                flex-direction: row;
+                align-items: center;
+                padding: 1rem;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+            .sidebar-header, .sidebar-user, .sidebar-section-title {
+                display: none;
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                gap: 1rem;
+                width: 100%;
+                justify-content: center;
+                padding: 0;
+            }
+            .sidebar-nav a {
+                padding: 0.8rem 1.2rem;
+                font-size: 0.9rem;
+                white-space: nowrap;
+                min-width: fit-content;
+            }
+            .sidebar-nav a:hover:not(.active) {
+                transform: translateY(-2px);
+            }
+            .main-content {
+                margin-left: 0;
+                margin-top: 0;
+                padding: 1.5rem;
+            }
+            .admin-header {
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+            .admin-header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar-nav {
+                gap: 0.5rem;
+            }
+            .sidebar-nav a {
+                padding: 0.7rem 1rem;
+                font-size: 0.85rem;
+            }
+            .main-content {
+                padding: 1rem;
+            }
+            .admin-header {
+                padding: 1.5rem;
+            }
+            .admin-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+        }
+
+        @media (max-width: 900px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .sidebar {
+                transform: translateY(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            ☰
+        </button>
+
+        <aside class="sidebar" id="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <img src="/static/roxas_logo.png" alt="Logo" class="logo">
+                    <h1>DOCS RECORD</h1>
+                </div>
+                {% if session.get('role') == 'admin' %}
+                <div class="sidebar-section-title">ADMIN PANEL</div>
+                <nav class="sidebar-nav">
+                    <a href="/admin_dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                        <i>📊</i> Dashboard
+                    </a>
+                    <a href="/manage_users" class="{% if active_page == 'users' %}active{% endif %}">
+                        <i>👥</i> User Management
+                    </a>
+                    <a href="/admin/reports" class="{% if active_page == 'reports' %}active{% endif %}">
+                        <i>📈</i> Reports
+                    </a>
+                </nav>
+
+                <script>
+                function toggleResourcesDropdown() {
+                    var links = document.getElementById('resourcesLinks');
+                    var arrow = document.getElementById('resourcesArrow');
+                    if (links.style.display === 'flex') {
+                        links.style.display = 'none';
+                        arrow.style.transform = '';
+                    } else {
+                        links.style.display = 'flex';
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                }
+                </script>
+                {% elif session.get('role') == 'receiving1' %}
+                <hr style="border:0;border-top:1.5px solid #fff2;margin:1.2rem 1.5rem 1.2rem 1.5rem;">
+                <div class="sidebar-section-title">DASHBOARDS</div>
+                <nav class="sidebar-nav">
+                    <a href="/dashboard/receiving1" class="{% if active_page == 'receiving1' %}active{% endif %}">&#128230; Receiving </a>
+                    <a href="/receiving1/add_document" class="{% if active_page == 'add_document' %}active{% endif %}">&#10133; Add Document</a>
+                    <a href="/receiving1/document_records" class="{% if active_page == 'document_records' %}active{% endif %}">&#128196; Document Records</a>
+                    <a href="/receiving1/document_folder" class="{% if active_page == 'document_folder' %}active{% endif %}">&#128193; Document Folder</a>
+                </nav>
+                {% elif session.get('role') == 'receiving2' %}
+                <hr style="border:0;border-top:1.5px solid #fff2;margin:1.2rem 1.5rem 1.2rem 1.5rem;">
+                <div class="sidebar-section-title">DASHBOARDS</div>
+                <nav class="sidebar-nav">
+                    <a href="/dashboard/receiving2" class="{% if active_page == 'receiving2' %}active{% endif %}">&#128230; Admin Receiving </a>
+                    <a href="/receiving2/add_email_docs" class="{% if active_page == 'add_email_docs' %}active{% endif %}">&#128231; Add Documents</a>
+                    <a href="/receiving2/rts" class="{% if active_page == 'receiving2_rts' %}active{% endif %}">&#128221; RTS</a>
+                    <a href="/receiving2/outgoing_docs" class="{% if active_page == 'receiving2_outgoing_document' %}active{% endif %}">&#128230; Out Documents</a>
+                    <a href="/receiving2/document_records" class="{% if active_page == 'receiving2_document_records' %}active{% endif %}">&#128202; Document Reports</a>
+                    <a href="/receiving2/admin_RC_folder" class="{% if active_page == 'receiving2_admin_RC_folder' %}active{% endif %}">&#128193; Admin Folder</a>
+                </nav>
+                {% elif session.get('role') == 'releasing' %}
+                <hr style="border:0;border-top:1.5px solid #fff2;margin:1.2rem 1.5rem 1.2rem 1.5rem;">
+                <div class="sidebar-section-title">RELEASING</div>
+                <nav class="sidebar-nav">
+                    <a href="/dashboard/releasing" class="{% if active_page == 'releasing_dashboard' %}active{% endif %}">&#128228; Releasing</a>
+                    <a href="/releasing/outgoing_docs" class="{% if active_page == 'outgoing_docs' %}active{% endif %}">&#128230; Outgoing Docs</a>
+                    <a href="/releasing/outgoing_records" class="{% if active_page == 'outgoing_records' %}active{% endif %}">&#128196; Outgoing Records</a>
+                    <a href="/releasing/outgoing_folder" class="{% if active_page == 'releasing_outgoing_folder' %}active{% endif %}">&#128193; Outgoing Folder</a>
+                </nav>
+                {% elif session.get('role') == 'docs' %}
+                <hr style="border:0;border-top:1.5px solid #fff2;margin:1.2rem 1.5rem 1.2rem 1.5rem;">
+                <div class="sidebar-section-title">DASHBOARDS</div>
+                <nav class="sidebar-nav">
+                    <a href="/dashboard/docs" class="{% if active_page == 'docs' %}active{% endif %}">&#128196; Documentation</a>
+                    <a href="/docs/gso" class="{% if active_page == 'gso' %}active{% endif %}">&#128736; GSO</a>
+                    <a href="/docs/travel" class="{% if active_page == 'travel' %}active{% endif %}">&#9992; Travel</a>
+                    <a href="/docs/special_permit" class="{% if active_page == 'special_permit' %}active{% endif %}">&#128221; Special Permit</a>
+                    <a href="/docs/application_leave" class="{% if active_page == 'application_leave' %}active{% endif %}">&#128197; Application Leave</a>
+                    <a href="/docs/docs_folder" class="{% if active_page == 'docs_docs_folder' %}active{% endif %}">&#128193; Docs Folder</a>
+                </nav>
+                {% endif %}
+            </div>
+            <div>
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+                    <div class="sidebar-user-info">
+                        <span class="name">{{ session.get('username', 'User') }}</span>
+                        <span class="role">{{ session.get('role', 'Role')|capitalize }}</span>
+                    </div>
+                </div>
+                <form id="logoutForm" action="/logout" method="post" style="margin:0;">
+                    <button id="openLogoutModal" class="sidebar-logout" type="button">&#128682; Logout</button>
+                </form>
+                <script>
+                function toggleMobileMenu() {
+                    const sidebar = document.getElementById('sidebar');
+                    sidebar.classList.toggle('mobile-open');
+                }
+                </script>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div class="admin-header">
+                <h1>{% block header_title %}Dashboard{% endblock %}</h1>
+            </div>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); text-align: center; position: relative;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🚪</div>
+            <h3 style="color: #333; margin-bottom: 1rem; font-weight: 600;">Confirm Logout</h3>
+            <p style="color: #666; margin-bottom: 2rem; line-height: 1.5;">Are you sure you want to logout? You will need to login again to access the system.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button id="cancelLogout" style="background: #6c757d; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(108,117,125,0.3);">Cancel</button>
+                <button id="confirmLogout" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(238,90,36,0.3);">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toastification System -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: none;"></div>
+
+    <style>
+        .toast {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            max-width: 400px;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .toast.warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+
+    <script>
+    // Toastification System
+    class ToastManager {
+        constructor() {
+            this.container = document.getElementById('toast-container');
+            this.toasts = [];
+        }
+
+        show(type, title, message, duration = 5000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                warning: '⚠️',
+                error: '❌',
+                info: 'ℹ️'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            this.container.appendChild(toast);
+            this.container.style.display = 'block';
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto remove
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.classList.remove('show');
+                        setTimeout(() => {
+                            if (toast.parentElement) {
+                                toast.remove();
+                                if (this.container.children.length === 0) {
+                                    this.container.style.display = 'none';
+                                }
+                            }
+                        }, 300);
+                    }
+                }, duration);
+            }
+
+            return toast;
+        }
+
+        success(title, message, duration) {
+            return this.show('success', title, message, duration);
+        }
+
+        warning(title, message, duration) {
+            return this.show('warning', title, message, duration);
+        }
+
+        error(title, message, duration) {
+            return this.show('error', title, message, duration);
+        }
+
+        info(title, message, duration) {
+            return this.show('info', title, message, duration);
+        }
+    }
+
+    // Global toast instance
+    window.toast = new ToastManager();
+
+    // Check for session messages and show toasts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show login success toast if user just logged in
+        if (sessionStorage.getItem('showLoginSuccess')) {
+            const role = '{{ session.get("role", "User") }}';
+            const username = '{{ session.get("username", "User") }}';
+            
+            let welcomeMessage = `Welcome back, ${username}!`;
+            let roleMessage = `You're logged in as ${role.charAt(0).toUpperCase() + role.slice(1)}.`;
+            
+            // Customize message based on role
+            switch(role) {
+                case 'admin':
+                    roleMessage = 'You have full administrative access.';
+                    break;
+                case 'receiving1':
+                    roleMessage = 'You can manage incoming documents and create folders.';
+                    break;
+                case 'receiving2':
+                    roleMessage = 'You can review, accept, and route documents.';
+                    break;
+                case 'docs':
+                    roleMessage = 'You can manage documentation and special permits.';
+                    break;
+                case 'releasing':
+                    roleMessage = 'You can manage outgoing documents and releases.';
+                    break;
+            }
+            
+            window.toast.success('Login Successful! 🎉', welcomeMessage + ' ' + roleMessage, 6000);
+            sessionStorage.removeItem('showLoginSuccess');
+        }
+
+        // Show any flash messages as toasts
+        const flashMessages = document.querySelectorAll('.alert');
+        flashMessages.forEach(alert => {
+            const message = alert.textContent.trim();
+            const isError = alert.classList.contains('alert-danger');
+            const isWarning = alert.classList.contains('alert-warning');
+            const isSuccess = alert.classList.contains('alert-success');
+            const isInfo = alert.classList.contains('alert-info');
+            
+            let type = 'info';
+            if (isError) type = 'error';
+            else if (isWarning) type = 'warning';
+            else if (isSuccess) type = 'success';
+            
+            window.toast[type]('Notification', message, 5000);
+            
+            // Remove the original alert
+            setTimeout(() => alert.remove(), 100);
+        });
+    });
+
+    // Logout confirmation modal functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutBtn = document.getElementById('openLogoutModal');
+        const logoutModal = document.getElementById('logoutModal');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const logoutForm = document.getElementById('logoutForm');
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (logoutModal) {
+                    logoutModal.style.display = 'block';
+                } else if (logoutForm) {
+                    // Fallback: if modal is missing, submit directly
+                    logoutForm.submit();
+                }
+            });
+        }
+
+        if (cancelLogout && logoutModal) {
+            cancelLogout.addEventListener('click', function() {
+                logoutModal.style.display = 'none';
+            });
+        }
+
+        if (confirmLogout && logoutForm) {
+            confirmLogout.addEventListener('click', function() {
+                logoutForm.submit();
+            });
+        }
+
+        if (logoutModal) {
+            // Hide modal when clicking outside of it
+            window.addEventListener('click', function(e) {
+                if (e.target === logoutModal) {
+                    logoutModal.style.display = 'none';
+                }
+            });
+
+            // Hide modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && logoutModal.style.display === 'block') {
+                    logoutModal.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    function toggleMobileMenu() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('mobile-open');
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,478 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'docs' %}
+{% block title %}Documentation Dashboard{% endblock %}
+{% block header_title %}Documentation Dashboard{% endblock %}
+{% block content %}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* Stat Cards Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .stat-card.document-stats::before { background: var(--primary-gradient); }
+    .stat-card.user-stats::before { background: var(--secondary-gradient); }
+    .stat-card.daily-stats::before { background: var(--accent-gradient); }
+    .stat-card.gso-stats::before { background: var(--success-gradient); }
+    .stat-card.travel-stats::before { background: var(--warning-gradient); }
+    .stat-card.permit-stats::before { background: var(--info-gradient); }
+    .stat-card.leave-stats::before { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+    .stat-card.other-stats::before { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+    .stat-card.outgoing-stats::before { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+    .stat-card.total-out-stats::before { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+
+    .stat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-info h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-info p {
+        margin: 0.5rem 0 0 0;
+        color: #666;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Left Column */
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .notification-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notification-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-gradient);
+    }
+
+    .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .notification-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .notification-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .notification-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0.5rem 0 1rem 0;
+        line-height: 1.5;
+    }
+
+    .notification-time {
+        color: #888;
+        font-size: 0.9rem;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    /* Right Column - Chart */
+    .chart-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .chart-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+
+    .no-documents {
+        padding: 3rem;
+        text-align: center;
+        color: #888;
+        font-size: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .no-documents-icon {
+        font-size: 3rem;
+        opacity: 0.6;
+        color: #667eea;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+        
+        .stat-card-content {
+            gap: 1rem;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .stat-info h3 {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stat-card {
+            padding: 1rem;
+        }
+        
+        .stat-card-content {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card gso-stats">
+            <div class="stat-card-content">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3>{{ total_gso }}</h3>
+                    <p>GSO Documents</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card travel-stats">
+            <div class="stat-card-content">
+                <div class="stat-icon">🌍</div>
+                <div class="stat-info">
+                    <h3>{{ total_travel }}</h3>
+                    <p>Travel Documents</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card leave-stats">
+            <div class="stat-card-content">
+                <div class="stat-icon">📝</div>
+                <div class="stat-info">
+                    <h3>{{ total_application_leave }}</h3>
+                    <p>Application Leave</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card permit-stats">
+            <div class="stat-card-content">
+                <div class="stat-icon">📋</div>
+                <div class="stat-info">
+                    <h3>{{ total_special_permit }}</h3>
+                    <p>Special Permit</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Left Column -->
+        <div class="left-column">
+            <!-- Notification Card -->
+            <div class="notification-card">
+                <div class="notification-header">
+                    <div class="notification-icon">🔔</div>
+                    <div>
+                        <h4 class="notification-title">Documentation Notification</h4>
+                        <p class="notification-subtitle">Welcome! Monitor documentation records and stats in real time. Stay on top of your department's activity.</p>
+                        <div id="docs-notif-datetime" class="notification-time"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-icon">📊</div>
+                <h4 class="chart-title">Document Statistics Overview</h4>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="docsChart"></canvas>
+            </div>
+            <!-- Hidden data container for chart -->
+            <div id="chart-data" 
+                 data-gso="{{ total_gso }}" 
+                 data-travel="{{ total_travel }}" 
+                 data-application-leave="{{ total_application_leave }}" 
+                 data-special-permit="{{ total_special_permit }}" 
+                 style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Chart data from server - using data attributes to avoid linter issues
+const chartData = {
+    gso: parseInt(document.getElementById('chart-data').getAttribute('data-gso')),
+    travel: parseInt(document.getElementById('chart-data').getAttribute('data-travel')),
+    applicationLeave: parseInt(document.getElementById('chart-data').getAttribute('data-application-leave')),
+    specialPermit: parseInt(document.getElementById('chart-data').getAttribute('data-special-permit'))
+};
+
+function updateDocsNotifTime() {
+    const el = document.getElementById('docs-notif-datetime');
+    if (!el) return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+    const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    el.textContent = `${dateStr}, ${timeStr}`;
+}
+setInterval(updateDocsNotifTime, 1000);
+updateDocsNotifTime();
+
+// Initialize the chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('docsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['GSO Documents', 'Travel Documents', 'Application Leave', 'Special Permit'],
+            datasets: [{
+                label: 'Number of Documents',
+                data: [chartData.gso, chartData.travel, chartData.applicationLeave, chartData.specialPermit],
+                backgroundColor: [
+                    'rgba(106, 130, 251, 0.8)',
+                    'rgba(17, 153, 142, 0.8)',
+                    'rgba(178, 69, 146, 0.8)',
+                    'rgba(255, 94, 98, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(106, 130, 251, 1)',
+                    'rgba(17, 153, 142, 1)',
+                    'rgba(178, 69, 146, 1)',
+                    'rgba(255, 94, 98, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#6a82fb',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Documents: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#666',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#666',
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,1235 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Outgoing Folder - Releasing{% endblock %}
+
+{% block header_title %}Releasing - Outgoing Folder{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .folders-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Stats Overview */
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #333;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.3rem;
+    }
+
+    /* Search Section */
+    .search-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+    }
+
+    .search-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .search-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .search-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 1rem 1rem 1rem 3rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: #f8fafc;
+        position: relative;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::before {
+        content: '🔍';
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        color: #666;
+        pointer-events: none;
+    }
+
+    .clear-button {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .clear-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    }
+
+    /* Folders Section */
+    .folders-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .folders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .folders-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .folders-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .upload-button {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .upload-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .folders-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+
+    .folder-item {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .folder-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .folder-item:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+        border-color: #667eea;
+    }
+
+    .folder-item:hover::before {
+        transform: scaleX(1);
+    }
+
+    .folder-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .folder-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .folder-info {
+        flex: 1;
+    }
+
+    .folder-name {
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .folder-count {
+        color: #666;
+        margin: 0.3rem 0 0 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .folder-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .edit-button {
+        background: var(--warning-gradient);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        box-shadow: 0 2px 8px rgba(250, 112, 154, 0.3);
+    }
+
+    .edit-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(250, 112, 154, 0.4);
+    }
+
+    .arrow-icon {
+        color: #667eea;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .folder-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+
+    .folder-date {
+        color: #888;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.6;
+    }
+
+    .empty-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .empty-text {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        color: #666;
+    }
+
+    .empty-button {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .empty-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Success/Error Messages */
+    .message {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .success-message {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--hover-shadow);
+        padding: 2.5rem;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: var(--transition);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        background: #f1f5f9;
+        color: #333;
+    }
+
+    .modal-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: var(--transition);
+        box-sizing: border-box;
+        background: #f8fafc;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        resize: vertical;
+        transition: var(--transition);
+        box-sizing: border-box;
+        background: #f8fafc;
+        min-height: 100px;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .file-upload-area {
+        border: 2px dashed #667eea;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        background: #f8faff;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .file-upload-area:hover {
+        border-color: #4f5bd5;
+        background: #f0f4ff;
+    }
+
+    .file-upload-area input[type="file"] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #667eea;
+    }
+
+    .upload-text {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-subtext {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .file-list {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .file-list-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-list-content {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .file-item:last-child {
+        border-bottom: none;
+    }
+
+    .file-icon {
+        font-size: 1.2rem;
+        color: #667eea;
+    }
+
+    .file-name {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .file-size {
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .cancel-button {
+        flex: 1;
+        background: #e2e8f0;
+        color: #333;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .cancel-button:hover {
+        background: #cbd5e1;
+        transform: translateY(-1px);
+    }
+
+    .submit-button {
+        flex: 1;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .folders-container {
+            padding: 1rem;
+        }
+
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+
+        .search-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .folders-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .folders-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+    }
+</style>
+
+<div class="folders-container">
+    <!-- Success/Error Messages -->
+    {% if success %}
+    <div class="message success-message">
+        <span>✅</span>
+        <span>Folder uploaded successfully!</span>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="message error-message">
+        <span>❌</span>
+        <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-content">
+                <div class="stat-value">{{ folders|length if folders else 0 }}</div>
+                <div class="stat-label">Total Folders</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-content">
+                <div class="stat-value">{{ folders|sum(attribute='file_count') if folders else 0 }}</div>
+                <div class="stat-label">Total Files</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <div class="stat-value">{{ folders|length if folders else 0 }}</div>
+                <div class="stat-label">Active Folders</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-header">
+            <div class="search-icon">🔍</div>
+            <h3 class="search-title">Search Folders & Documents</h3>
+        </div>
+        <div class="search-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search folders and documents...">
+            <button onclick="clearSearch()" id="clearSearchBtn" class="clear-button">
+                <span>🔄</span>
+                <span>Clear</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Folders Section -->
+    <div class="folders-section">
+        <div class="folders-header">
+            <h3 class="folders-title">
+                <div class="folders-icon">📁</div>
+                <span>Outgoing Folders</span>
+            </h3>
+            <button onclick="openUploadModal()" class="upload-button">
+                <span>📁</span>
+                <span>Upload New Folder</span>
+            </button>
+        </div>
+        
+        {% if folders %}
+        <div class="folders-grid">
+            {% for folder in folders %}
+            <div class="folder-item" data-folder-id="{{ folder.id }}">
+                <div class="folder-header">
+                    <div class="folder-icon">📁</div>
+                    <div class="folder-info">
+                        <h4 class="folder-name">{{ folder.folder_name }}</h4>
+                        <p class="folder-count">{{ folder.file_count }} files</p>
+                    </div>
+                    <div class="folder-actions">
+                        <button data-folder-id="{{ folder.id }}" class="edit-button">
+                            <span>✏️</span>
+                            <span>Edit</span>
+                        </button>
+                        <div class="arrow-icon">→</div>
+                    </div>
+                </div>
+                
+                {% if folder.folder_description %}
+                <div class="folder-description">
+                    {{ folder.folder_description[:100] }}{% if folder.folder_description|length > 100 %}...{% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="folder-date">
+                    Created: {{ folder.created_at.strftime('%B %d, %Y') if folder.created_at else 'Unknown' }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📁</div>
+            <div class="empty-title">No folders uploaded yet</div>
+            <div class="empty-text">Start organizing your documents by creating your first folder</div>
+            <button onclick="openUploadModal()" class="empty-button">
+                Upload Your First Folder
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal-content">
+        <button onclick="closeUploadModal()" class="modal-close">✕</button>
+        
+        <h2 class="modal-title">Upload New Outgoing Document</h2>
+        
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="form-group">
+                <label for="folder_name" class="form-label">Folder Name *</label>
+                <input type="text" id="folder_name" name="folder_name" required 
+                       placeholder="Enter folder name..." class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="folder_description" class="form-label">Folder Description</label>
+                <textarea id="folder_description" name="folder_description" rows="4" 
+                          placeholder="Enter folder description..." class="form-textarea"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select Files *</label>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <input type="file" id="document_files" name="document_files" multiple required>
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Click to select files or drag and drop</div>
+                    <div class="upload-subtext">Multiple files can be selected</div>
+                    </div>
+                <div id="fileList" class="file-list">
+                    <h4 class="file-list-title">Selected Files:</h4>
+                    <div id="fileListContent" class="file-list-content"></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="closeUploadModal()" class="cancel-button">
+                    Cancel
+                </button>
+                <button type="submit" class="submit-button">
+                    Upload Folder
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openUploadModal() {
+    document.getElementById('uploadModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeUploadModal() {
+    document.getElementById('uploadModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    // Reset form
+    document.getElementById('uploadForm').reset();
+    document.getElementById('fileList').style.display = 'none';
+}
+
+// View folder contents
+function viewFolder(folderId) {
+    window.location.href = `/releasing/folder/${folderId}`;
+}
+
+// Edit folder
+function editFolder(folderId, event) {
+    event.stopPropagation();
+    window.location.href = `/releasing/edit_folder/${folderId}`;
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('uploadModal');
+    const modalContent = document.querySelector('.modal-content');
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeUploadModal();
+        }
+    });
+    
+    modalContent.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Add click event listeners to folder items
+    const folderItems = document.querySelectorAll('.folder-item');
+    folderItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+            const folderId = this.getAttribute('data-folder-id');
+            viewFolder(folderId);
+        });
+    });
+
+    // Add click event listeners to edit buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-button')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.edit-button');
+            const folderId = button.getAttribute('data-folder-id');
+            editFolder(folderId, e);
+        }
+    });
+
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('document_files');
+    const fileList = document.getElementById('fileList');
+    const fileListContent = document.getElementById('fileListContent');
+
+    // Handle file selection
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            displayFileList(files);
+        }
+    });
+
+    // Handle drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#4f5bd5';
+        fileUploadArea.style.background = '#f0f4ff';
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#667eea';
+        fileUploadArea.style.background = '#f8faff';
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#667eea';
+        fileUploadArea.style.background = '#f8faff';
+        
+        const files = Array.from(e.dataTransfer.files);
+        fileInput.files = e.dataTransfer.files;
+        if (files.length > 0) {
+            displayFileList(files);
+        }
+    });
+
+    function displayFileList(files) {
+        fileList.style.display = 'block';
+        fileListContent.innerHTML = '';
+        
+        files.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <span class="file-icon">📄</span>
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">${formatFileSize(file.size)}</span>
+            `;
+            fileListContent.appendChild(fileItem);
+        });
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form validation
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        const folderName = document.getElementById('folder_name').value.trim();
+        const files = fileInput.files;
+        
+        if (!folderName) {
+            e.preventDefault();
+            alert('Please enter a folder name');
+            return;
+        }
+        
+        if (files.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one file');
+            return;
+        }
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const foldersGrid = document.querySelector('.folders-grid');
+    const originalFolders = Array.from(folderItems);
+
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        const hasSearchTerm = searchTerm.length > 0;
+        
+        clearSearchBtn.style.display = hasSearchTerm ? 'flex' : 'none';
+        
+        clearTimeout(searchTimeout);
+        
+        if (!hasSearchTerm) {
+            resetSearchResults();
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            performSearch(searchTerm);
+        }, 300);
+    });
+
+    function performSearch(searchTerm) {
+        fetch(`/releasing/search_folders?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data.folders, data.files, searchTerm);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                displaySearchResults([], [], searchTerm);
+            });
+    }
+
+    function displaySearchResults(folders, files, searchTerm) {
+        foldersGrid.innerHTML = '';
+        
+        let hasResults = false;
+        
+        if (folders.length > 0) {
+            hasResults = true;
+            const foldersSection = document.createElement('div');
+            foldersSection.style.cssText = 'grid-column: 1 / -1; margin-bottom: 2rem;';
+            foldersSection.innerHTML = `
+                <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">
+                    📁 Matching Folders (${folders.length})
+                </h4>
+            `;
+            foldersGrid.appendChild(foldersSection);
+            
+            folders.forEach(folder => {
+                const folderElement = createFolderElement(folder);
+                foldersGrid.appendChild(folderElement);
+            });
+        }
+        
+        if (files.length > 0) {
+            hasResults = true;
+            const filesSection = document.createElement('div');
+            filesSection.style.cssText = 'grid-column: 1 / -1; margin-bottom: 2rem;';
+            filesSection.innerHTML = `
+                <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">
+                    📄 Matching Files (${files.length})
+                </h4>
+            `;
+            foldersGrid.appendChild(filesSection);
+            
+            files.forEach(file => {
+                const fileElement = createFileElement(file);
+                foldersGrid.appendChild(fileElement);
+            });
+        }
+        
+        if (!hasResults) {
+            const noResultsMsg = document.createElement('div');
+            noResultsMsg.style.cssText = 'text-align: center; color: #666; padding: 3rem; grid-column: 1 / -1;';
+            noResultsMsg.innerHTML = `
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No folders or files found matching "${searchTerm}"</p>
+                <p style="font-size: 0.9rem; color: #888;">Try adjusting your search terms</p>
+            `;
+            foldersGrid.appendChild(noResultsMsg);
+        }
+    }
+
+    function createFolderElement(folder) {
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'folder-item';
+        folderDiv.setAttribute('data-folder-id', folder.id);
+        
+        const createdDate = new Date(folder.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        folderDiv.innerHTML = `
+            <div class="folder-header">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                    <h4 class="folder-name">${folder.folder_name}</h4>
+                    <p class="folder-count">${folder.file_count} files</p>
+                </div>
+                <div class="folder-actions">
+                    <button data-folder-id="${folder.id}" class="edit-button">
+                        <span>✏️</span>
+                        <span>Edit</span>
+                    </button>
+                    <div class="arrow-icon">→</div>
+                </div>
+            </div>
+            ${folder.folder_description ? `
+                <div class="folder-description">
+                    ${folder.folder_description.length > 100 ? folder.folder_description.substring(0, 100) + '...' : folder.folder_description}
+                </div>
+            ` : ''}
+            <div class="folder-date">
+                Created: ${createdDate}
+            </div>
+        `;
+        
+        folderDiv.addEventListener('click', () => viewFolder(folder.id));
+        return folderDiv;
+    }
+
+    function createFileElement(file) {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'folder-item';
+        
+        const fileSize = (file.file_size / 1024).toFixed(1);
+        const uploadedDate = new Date(file.uploaded_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        const fileName = file.file_name.toLowerCase();
+        let fileIcon = '📎';
+        if (fileName.endsWith('.pdf')) fileIcon = '📄';
+        else if (fileName.match(/\.(jpg|jpeg|png|gif)$/)) fileIcon = '🖼️';
+        else if (fileName.match(/\.(doc|docx)$/)) fileIcon = '📝';
+        else if (fileName.match(/\.(xls|xlsx)$/)) fileIcon = '📊';
+        else if (fileName.match(/\.(ppt|pptx)$/)) fileIcon = '📽️';
+        
+        fileDiv.innerHTML = `
+            <div class="folder-header">
+                <div class="folder-icon">${fileIcon}</div>
+                <div class="folder-info">
+                    <h4 class="folder-name">${file.file_name}</h4>
+                    <p class="folder-count">${fileSize} KB • ${file.file_type || 'Unknown type'}</p>
+                </div>
+            </div>
+            <div class="folder-description">
+                📁 In folder: ${file.folder_name}
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                <a href="/releasing/folder/${file.folder_id}/preview/${file.id}" 
+                   target="_blank"
+                   style="background: var(--primary-gradient); color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; transition: var(--transition);">
+                    👁️ Preview
+                </a>
+                <a href="/releasing/folder/${file.folder_id}/download/${file.id}" 
+                   style="background: var(--success-gradient); color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; transition: var(--transition);">
+                    ⬇️ Download
+                </a>
+                <a href="/releasing/folder/${file.folder_id}" 
+                   style="background: var(--warning-gradient); color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; transition: var(--transition);">
+                    📁 View Folder
+                </a>
+            </div>
+            <div class="folder-date">
+                Uploaded by ${file.uploaded_by} on ${uploadedDate}
+            </div>
+        `;
+        
+        return fileDiv;
+    }
+
+    function resetSearchResults() {
+        foldersGrid.innerHTML = '';
+        originalFolders.forEach(folder => {
+            folder.style.display = 'block';
+            folder.style.opacity = '1';
+            foldersGrid.appendChild(folder);
+        });
+    }
+
+    // Clear search function
+    window.clearSearch = function() {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    };
+
+    // Search input focus effects
+    searchInput.addEventListener('focus', function() {
+        this.style.borderColor = '#667eea';
+        this.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+    });
+
+    searchInput.addEventListener('blur', function() {
+        this.style.borderColor = '#e2e8f0';
+        this.style.boxShadow = 'none';
+    });
+});
+</script>
+
+{% endblock %} 

@@ -1,0 +1,556 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'create_user' %}
+{% block title %}Create User - Admin Panel{% endblock %}
+{% block header_title %}Create User{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .create-user-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #333;
+        margin: 0 0 1rem 0;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .success-message {
+        background: var(--success-gradient);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 2rem;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .success-message::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .success-message span {
+        position: relative;
+        z-index: 2;
+    }
+
+    .form-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 3rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .form-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 25px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+        margin: 0 auto 1.5rem auto;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        transition: var(--transition);
+    }
+
+    .form-icon:hover {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .form-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.8rem;
+        display: block;
+        transition: var(--transition);
+    }
+
+    .form-label:hover {
+        color: #667eea;
+    }
+
+    .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        border-radius: 15px;
+        border: 2px solid #e2e8f0;
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .input-container:focus-within {
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .input-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 1.4rem;
+        background: transparent;
+        border: none;
+        pointer-events: none;
+        transition: var(--transition);
+    }
+
+    .input-container:focus-within .input-icon {
+        color: #764ba2;
+        transform: scale(1.1);
+    }
+
+    .form-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 1.2rem 1.2rem 1.2rem 0;
+        font-size: 1.1rem;
+        outline: none;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .form-input::placeholder {
+        color: #a0aec0;
+        font-weight: 400;
+    }
+
+    .form-select {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 1.2rem 1.2rem 1.2rem 0;
+        font-size: 1.1rem;
+        outline: none;
+        color: #333;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .form-select option {
+        background: #fff;
+        color: #333;
+        padding: 1rem;
+    }
+
+    .submit-button {
+        width: 100%;
+        background: var(--primary-gradient);
+        color: #fff;
+        padding: 1.2rem 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .submit-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .submit-button:hover::before {
+        left: 100%;
+    }
+
+    .submit-button:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .submit-button:active {
+        transform: translateY(-1px);
+    }
+
+    .submit-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .form-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .form-footer-text {
+        color: #888;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 1rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        transition: var(--transition);
+        background: rgba(102, 126, 234, 0.1);
+    }
+
+    .back-link:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateX(-5px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .create-user-container {
+            padding: 1rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .form-card {
+            padding: 2rem;
+        }
+        
+        .form-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+        }
+        
+        .form-title {
+            font-size: 1.5rem;
+        }
+        
+        .input-container {
+            border-radius: 12px;
+        }
+        
+        .input-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+        
+        .form-input, .form-select {
+            padding: 1rem 1rem 1rem 0;
+            font-size: 1rem;
+        }
+        
+        .submit-button {
+            padding: 1rem 0;
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-title {
+            font-size: 1.8rem;
+        }
+        
+        .form-card {
+            padding: 1.5rem;
+        }
+        
+        .form-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.8rem;
+        }
+        
+        .form-title {
+            font-size: 1.3rem;
+        }
+        
+        .input-container {
+            border-radius: 10px;
+        }
+        
+        .input-icon {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+        
+        .form-input, .form-select {
+            padding: 0.8rem 0.8rem 0.8rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .submit-button {
+            padding: 0.9rem 0;
+            font-size: 1rem;
+        }
+    }
+
+    /* Loading Animation */
+    .loading {
+        position: relative;
+        pointer-events: none;
+    }
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid transparent;
+        border-top: 2px solid #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="create-user-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Create New User</h1>
+        <p class="page-subtitle">Add a new user to the system with appropriate role and permissions</p>
+    </div>
+
+    <!-- Success Message -->
+    {% if success %}
+    <div class="success-message">
+        <span>✅ {{ success }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Create User Form -->
+    <div class="form-card">
+        <div class="form-header">
+            <div class="form-icon">👥</div>
+            <h2 class="form-title">User Information</h2>
+            <p class="form-subtitle">Fill in the details below to create a new user account</p>
+        </div>
+
+        <form method="POST" action="/create_user" id="createUserForm">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <div class="input-container">
+                    <div class="input-icon">👤</div>
+                    <input type="text" id="username" name="username" required class="form-input" placeholder="Enter a unique username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-container">
+                    <div class="input-icon">🔒</div>
+                    <input type="password" id="password" name="password" required class="form-input" placeholder="Enter a secure password">
+                </div>
+        </div>
+
+            <div class="form-group">
+                <label for="role" class="form-label">Role</label>
+                <div class="input-container">
+                    <div class="input-icon">🎭</div>
+                    <select id="role" name="role" required class="form-select">
+                        <option value="">Select a role</option>
+                        <option value="admin">Admin - Full system access</option>
+                        <option value="receiving1">Receiving - Document receiving access</option>
+                        <option value="receiving2">Admin Receiving - Advanced receiving features</option>
+                        <option value="docs">Documentation - Document management access</option>
+                        <option value="releasing">Releasing - Document releasing access</option>
+            </select>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                <span class="btn-text">Create User</span>
+            </button>
+        </form>
+
+        <div class="form-footer">
+            <p class="form-footer-text">Make sure to assign appropriate roles based on user responsibilities</p>
+            <a href="/manage_users" class="back-link">
+                <span>←</span>
+                Back to User Management
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form submission handling
+document.getElementById('createUserForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    
+    // Show loading state
+    submitBtn.classList.add('loading');
+    btnText.textContent = 'Creating User...';
+    submitBtn.disabled = true;
+    
+    // Form will submit normally, loading state will be cleared on page reload
+});
+
+// Input focus effects
+document.querySelectorAll('.form-input, .form-select').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'translateY(-2px)';
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'translateY(0)';
+    });
+});
+
+// Role selection helper
+document.getElementById('role').addEventListener('change', function() {
+    const selectedRole = this.value;
+    const roleDescriptions = {
+        'admin': 'Full system access and user management',
+        'receiving1': 'Basic document receiving and management',
+        'receiving2': 'Advanced receiving with admin features',
+        'docs': 'Document creation and management',
+        'releasing': 'Document releasing and tracking'
+    };
+    
+    if (selectedRole && roleDescriptions[selectedRole]) {
+        // You could show a tooltip or description here
+        console.log(`Role selected: ${roleDescriptions[selectedRole]}`);
+    }
+});
+
+// Form validation
+document.getElementById('username').addEventListener('input', function() {
+    const username = this.value.trim();
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (username.length < 3) {
+        this.style.borderColor = '#ff6b6b';
+        submitBtn.disabled = true;
+    } else {
+        this.style.borderColor = '#667eea';
+        submitBtn.disabled = false;
+    }
+});
+
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (password.length < 6) {
+        this.style.borderColor = '#ff6b6b';
+        submitBtn.disabled = true;
+    } else {
+        this.style.borderColor = '#667eea';
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %} 

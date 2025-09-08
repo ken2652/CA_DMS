@@ -1,0 +1,578 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Documentation Folder - Docs{% endblock %}
+
+{% block header_title %}Docs - Documentation Folder{% endblock %}
+
+{% block content %}
+<!-- Bootstrap CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<div class="main-container" style="max-width: 1200px; margin: 0 auto;">
+    <!-- Success/Error Messages -->
+    {% if success %}
+    <div class="success-message" style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center; font-weight: 600;">
+        ✅ Folder uploaded successfully!
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="error-message" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center; font-weight: 600;">
+        ❌ {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Search Bar Section -->
+    <div class="search-section" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px #e0e7ef22; padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="flex: 1; position: relative;">
+                <input type="text" id="searchInput" placeholder="Search folders and documents..." 
+                       style="width: 100%; padding: 1rem 1rem 1rem 3rem; border: 2px solid #e0e7ef; border-radius: 12px; font-size: 1rem; transition: all 0.2s; box-sizing: border-box; background: #f8faff;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: #666;">🔍</span>
+            </div>
+            <button onclick="clearSearch()" id="clearSearchBtn" 
+                    style="background: #e0e7ef; color: #666; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: none;">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- Folder List Section -->
+    <div class="folders-section" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px #e0e7ef22; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="font-size: 1.4rem; font-weight: 700; color: #222; margin: 0;">Documentation Folders</h3>
+            <button onclick="openUploadModal()" 
+                    style="background: linear-gradient(135deg, #4f5bd5 0%, #6a82fb 100%); color: #fff; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">📁</span>
+                Upload New Folder
+            </button>
+        </div>
+        
+        {% if folders %}
+        <div class="folders-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+            {% for folder in folders %}
+            <div class="folder-item" data-folder-id="{{ folder.id }}" 
+                 style="background: #f8faff; border: 1px solid #e0e7ef; border-radius: 8px; padding: 1.5rem; cursor: pointer; transition: all 0.2s;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <div style="font-size: 1.5rem;">📁</div>
+                    <div style="flex: 1;">
+                        <h4 style="font-weight: 600; color: #333; margin: 0;">{{ folder.folder_name }}</h4>
+                        <p style="color: #666; margin: 0; font-size: 0.9rem;">{{ folder.file_count }} files</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button data-folder-id="{{ folder.id }}" class="edit-folder-btn"
+                                style="background: #ffc107; color: #333; border: none; padding: 0.5rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.3rem;">
+                            <span style="font-size: 1rem;">✏️</span>
+                            Edit
+                        </button>
+                        <div style="color: #6a82fb; font-size: 1.2rem;">→</div>
+                    </div>
+                </div>
+                
+                {% if folder.folder_description %}
+                <div style="color: #666; font-size: 0.85rem; margin-bottom: 0.5rem; line-height: 1.4;">
+                    {{ folder.folder_description[:100] }}{% if folder.folder_description|length > 100 %}...{% endif %}
+                </div>
+                {% endif %}
+                
+                <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">
+                    Created: {{ folder.created_at.strftime('%B %d, %Y') if folder.created_at else 'Unknown' }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; color: #666; padding: 3rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📁</div>
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">No folders uploaded yet</p>
+            <button onclick="openUploadModal()" 
+                    style="background: linear-gradient(135deg, #4f5bd5 0%, #6a82fb 100%); color: #fff; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                Upload Your First Folder
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); padding: 2.5rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative;">
+        <button onclick="closeUploadModal()" 
+                style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; padding: 0.5rem; border-radius: 50%; transition: background 0.2s;">
+            ✕
+        </button>
+        
+        <h2 style="font-size: 1.8rem; font-weight: 700; color: #222; margin-bottom: 2rem; text-align: center;">Upload New Documentation</h2>
+        
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="folder_name" style="display: block; font-weight: 600; color: #333; margin-bottom: 0.5rem; font-size: 1rem;">
+                    Folder Name *
+                </label>
+                <input type="text" id="folder_name" name="folder_name" required 
+                       placeholder="Enter folder name..." 
+                       style="width: 100%; padding: 0.8rem 1rem; border: 2px solid #e0e7ef; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="folder_description" style="display: block; font-weight: 600; color: #333; margin-bottom: 0.5rem; font-size: 1rem;">
+                    Folder Description
+                </label>
+                <textarea id="folder_description" name="folder_description" rows="4" 
+                          placeholder="Enter folder description..." 
+                          style="width: 100%; padding: 0.8rem 1rem; border: 2px solid #e0e7ef; border-radius: 8px; font-size: 1rem; resize: vertical; transition: border-color 0.2s; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="display: block; font-weight: 600; color: #333; margin-bottom: 0.5rem; font-size: 1rem;">
+                    Select Files *
+                </label>
+                <div class="file-upload-area" id="fileUploadArea" 
+                     style="border: 2px dashed #6a82fb; border-radius: 12px; padding: 2rem; text-align: center; background: #f8faff; cursor: pointer; transition: all 0.2s; position: relative;">
+                    <input type="file" id="document_files" name="document_files" multiple required 
+                           style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; top: 0; left: 0;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📁</div>
+                    <div style="font-size: 1rem; font-weight: 600; color: #333; margin-bottom: 0.5rem;">
+                        Click to select files or drag and drop
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem;">
+                        Multiple files can be selected
+                    </div>
+                </div>
+                <div id="fileList" style="margin-top: 1rem; display: none;">
+                    <h4 style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Selected Files:</h4>
+                    <div id="fileListContent" style="background: #f8f9fa; border-radius: 8px; padding: 1rem; max-height: 150px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" onclick="closeUploadModal()" 
+                        style="flex: 1; background: #e0e7ef; color: #333; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        style="flex: 1; background: linear-gradient(135deg, #4f5bd5 0%, #6a82fb 100%); color: #fff; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s;">
+                    Upload Folder
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openUploadModal() {
+    document.getElementById('uploadModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeUploadModal() {
+    document.getElementById('uploadModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    // Reset form
+    document.getElementById('uploadForm').reset();
+    document.getElementById('fileList').style.display = 'none';
+}
+
+// View folder contents
+function viewFolder(folderId) {
+    window.location.href = `/docs/folder/${folderId}`;
+}
+
+// Edit folder
+function editFolder(folderId, event) {
+    event.stopPropagation(); // Prevent triggering the folder click event
+    window.location.href = `/docs/edit_folder/${folderId}`;
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('uploadModal');
+    const modalContent = document.querySelector('.modal-content');
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeUploadModal();
+        }
+    });
+    
+    // Prevent modal from closing when clicking inside modal content
+    modalContent.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Add click event listeners to folder items
+    const folderItems = document.querySelectorAll('.folder-item');
+    folderItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+            const folderId = this.getAttribute('data-folder-id');
+            viewFolder(folderId);
+        });
+    });
+
+    // Add click event listeners to edit buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-folder-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.edit-folder-btn');
+            const folderId = button.getAttribute('data-folder-id');
+            editFolder(folderId, e);
+        }
+    });
+
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('document_files');
+    const fileList = document.getElementById('fileList');
+    const fileListContent = document.getElementById('fileListContent');
+
+    // Handle file selection
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            displayFileList(files);
+        }
+    });
+
+    // Handle drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#4f5bd5';
+        fileUploadArea.style.background = '#f0f4ff';
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#6a82fb';
+        fileUploadArea.style.background = '#f8faff';
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#6a82fb';
+        fileUploadArea.style.background = '#f8faff';
+        
+        const files = Array.from(e.dataTransfer.files);
+        fileInput.files = e.dataTransfer.files;
+        if (files.length > 0) {
+            displayFileList(files);
+        }
+    });
+
+    function displayFileList(files) {
+        fileList.style.display = 'block';
+        fileListContent.innerHTML = '';
+        
+        files.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid #e0e7ef;';
+            fileItem.innerHTML = `
+                <span style="font-size: 1.2rem;">📄</span>
+                <span style="flex: 1; font-size: 0.9rem;">${file.name}</span>
+                <span style="color: #666; font-size: 0.8rem;">${formatFileSize(file.size)}</span>
+            `;
+            fileListContent.appendChild(fileItem);
+        });
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form validation
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        const folderName = document.getElementById('folder_name').value.trim();
+        const files = fileInput.files;
+        
+        if (!folderName) {
+            e.preventDefault();
+            alert('Please enter a folder name');
+            return;
+        }
+        
+        if (files.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one file');
+            return;
+        }
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const foldersGrid = document.querySelector('.folders-grid');
+    const originalFolders = Array.from(folderItems);
+
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        const hasSearchTerm = searchTerm.length > 0;
+        
+        // Show/hide clear button
+        clearSearchBtn.style.display = hasSearchTerm ? 'block' : 'none';
+        
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+        
+        if (!hasSearchTerm) {
+            // Reset to original state
+            resetSearchResults();
+            return;
+        }
+        
+        // Debounce search
+        searchTimeout = setTimeout(() => {
+            performSearch(searchTerm);
+        }, 300);
+    });
+
+    function performSearch(searchTerm) {
+        fetch(`/docs/search_folders?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data.folders, data.files, searchTerm);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                displaySearchResults([], [], searchTerm);
+            });
+    }
+
+    function displaySearchResults(folders, files, searchTerm) {
+        // Clear current display
+        foldersGrid.innerHTML = '';
+        
+        let hasResults = false;
+        
+        // Display matching folders
+        if (folders.length > 0) {
+            hasResults = true;
+            const foldersSection = document.createElement('div');
+            foldersSection.style.cssText = 'grid-column: 1 / -1; margin-bottom: 2rem;';
+            foldersSection.innerHTML = `
+                <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem; border-bottom: 2px solid #e0e7ef; padding-bottom: 0.5rem;">
+                    📁 Matching Folders (${folders.length})
+                </h4>
+            `;
+            foldersGrid.appendChild(foldersSection);
+            
+            folders.forEach(folder => {
+                const folderElement = createFolderElement(folder);
+                foldersGrid.appendChild(folderElement);
+            });
+        }
+        
+        // Display matching files
+        if (files.length > 0) {
+            hasResults = true;
+            const filesSection = document.createElement('div');
+            filesSection.style.cssText = 'grid-column: 1 / -1; margin-bottom: 2rem;';
+            filesSection.innerHTML = `
+                <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem; border-bottom: 2px solid #e0e7ef; padding-bottom: 0.5rem;">
+                    📄 Matching Files (${files.length})
+                </h4>
+            `;
+            foldersGrid.appendChild(filesSection);
+            
+            files.forEach(file => {
+                const fileElement = createFileElement(file);
+                foldersGrid.appendChild(fileElement);
+            });
+        }
+        
+        // Show no results message
+        if (!hasResults) {
+            const noResultsMsg = document.createElement('div');
+            noResultsMsg.style.cssText = 'text-align: center; color: #666; padding: 3rem; grid-column: 1 / -1;';
+            noResultsMsg.innerHTML = `
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No folders or files found matching "${searchTerm}"</p>
+                <p style="font-size: 0.9rem; color: #888;">Try adjusting your search terms</p>
+            `;
+            foldersGrid.appendChild(noResultsMsg);
+        }
+    }
+
+    function createFolderElement(folder) {
+        const folderDiv = document.createElement('div');
+        folderDiv.className = 'folder-item';
+        folderDiv.setAttribute('data-folder-id', folder.id);
+        folderDiv.style.cssText = 'background: #f8faff; border: 1px solid #e0e7ef; border-radius: 8px; padding: 1.5rem; cursor: pointer; transition: all 0.2s;';
+        
+        const createdDate = new Date(folder.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        folderDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <div style="font-size: 1.5rem;">📁</div>
+                <div style="flex: 1;">
+                    <h4 style="font-weight: 600; color: #333; margin: 0;">${folder.folder_name}</h4>
+                    <p style="color: #666; margin: 0; font-size: 0.9rem;">${folder.file_count} files</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button data-folder-id="${folder.id}" class="edit-folder-btn"
+                            style="background: #ffc107; color: #333; border: none; padding: 0.5rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.3rem;">
+                        <span style="font-size: 1rem;">✏️</span>
+                        Edit
+                    </button>
+                    <div style="color: #6a82fb; font-size: 1.2rem;">→</div>
+                </div>
+            </div>
+            ${folder.folder_description ? `
+                <div style="color: #666; font-size: 0.85rem; margin-bottom: 0.5rem; line-height: 1.4;">
+                    ${folder.folder_description.length > 100 ? folder.folder_description.substring(0, 100) + '...' : folder.folder_description}
+                </div>
+            ` : ''}
+            <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">
+                Created: ${createdDate}
+            </div>
+        `;
+        
+        folderDiv.addEventListener('click', () => viewFolder(folder.id));
+        return folderDiv;
+    }
+
+    function createFileElement(file) {
+        const fileDiv = document.createElement('div');
+        fileDiv.style.cssText = 'background: #f8faff; border: 1px solid #e0e7ef; border-radius: 8px; padding: 1.5rem;';
+        
+        const fileSize = (file.file_size / 1024).toFixed(1);
+        const uploadedDate = new Date(file.uploaded_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Get file icon based on extension
+        const fileName = file.file_name.toLowerCase();
+        let fileIcon = '📎';
+        if (fileName.endsWith('.pdf')) fileIcon = '📄';
+        else if (fileName.match(/\.(jpg|jpeg|png|gif)$/)) fileIcon = '🖼️';
+        else if (fileName.match(/\.(doc|docx)$/)) fileIcon = '📝';
+        else if (fileName.match(/\.(xls|xlsx)$/)) fileIcon = '📊';
+        else if (fileName.match(/\.(ppt|pptx)$/)) fileIcon = '📽️';
+        
+        fileDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 2rem;">${fileIcon}</div>
+                <div style="flex: 1;">
+                    <h4 style="font-weight: 600; color: #333; margin: 0; word-break: break-word;">${file.file_name}</h4>
+                    <p style="color: #666; margin: 0.3rem 0 0 0; font-size: 0.9rem;">
+                        ${fileSize} KB • ${file.file_type || 'Unknown type'}
+                    </p>
+                    <p style="color: #6a82fb; margin: 0.3rem 0 0 0; font-size: 0.9rem; font-weight: 600;">
+                        📁 In folder: ${file.folder_name}
+                    </p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/docs/folder/${file.folder_id}/preview/${file.id}" 
+                   target="_blank"
+                   style="background: #6a82fb; color: #fff; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">
+                    👁️ Preview
+                </a>
+                <a href="/docs/folder/${file.folder_id}/download/${file.id}" 
+                   style="background: #28a745; color: #fff; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">
+                    ⬇️ Download
+                </a>
+                <a href="/docs/folder/${file.folder_id}" 
+                   style="background: #ffc107; color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">
+                    📁 View Folder
+                </a>
+            </div>
+            
+            <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">
+                Uploaded by ${file.uploaded_by} on ${uploadedDate}
+            </div>
+        `;
+        
+        return fileDiv;
+    }
+
+    function resetSearchResults() {
+        // Restore original folders
+        foldersGrid.innerHTML = '';
+        originalFolders.forEach(folder => {
+            folder.style.display = 'block';
+            folder.style.opacity = '1';
+            foldersGrid.appendChild(folder);
+        });
+    }
+
+    // Clear search function
+    window.clearSearch = function() {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    };
+
+    // Search input focus effects
+    searchInput.addEventListener('focus', function() {
+        this.style.borderColor = '#6a82fb';
+        this.style.boxShadow = '0 0 0 3px rgba(106, 130, 251, 0.1)';
+    });
+
+    searchInput.addEventListener('blur', function() {
+        this.style.borderColor = '#e0e7ef';
+        this.style.boxShadow = 'none';
+    });
+});
+</script>
+
+<style>
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #6a82fb;
+    box-shadow: 0 0 0 3px rgba(106, 130, 251, 0.1);
+}
+
+.file-upload-area:hover {
+    border-color: #4f5bd5;
+    background: #f0f4ff;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-1px);
+}
+
+.folder-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #6a82fb;
+}
+
+.folder-item button:hover {
+    background: #e0a800 !important;
+    transform: translateY(-1px);
+}
+
+.folders-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+    .upload-container {
+        padding: 0 1rem;
+    }
+    
+    .upload-card {
+        padding: 1.5rem;
+    }
+    
+    .folders-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %} 

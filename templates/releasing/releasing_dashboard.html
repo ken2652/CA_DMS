@@ -1,0 +1,450 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'releasing_dashboard' %}
+{% block title %}Releasing Dashboard{% endblock %}
+{% block header_title %}Releasing Dashboard{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* Stat Cards Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .stat-card.total-released::before { background: var(--primary-gradient); }
+    .stat-card.todays-released::before { background: var(--accent-gradient); }
+
+    .stat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-info h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-info p {
+        margin: 0.5rem 0 0 0;
+        color: #666;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Left Column */
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .welcome-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-gradient);
+    }
+
+    .welcome-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .welcome-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .welcome-subtitle {
+        color: #666;
+        font-size: 1rem;
+        margin: 0.5rem 0 1rem 0;
+        line-height: 1.5;
+    }
+
+    .datetime-display {
+        color: #667eea;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: left;
+        padding: 1rem;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    /* Right Column - Table */
+    .table-card {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .table-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .table-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .table-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .table-container {
+        background: #f8fafc;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    .table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .table th {
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: var(--transition);
+    }
+
+    .table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .table td {
+        padding: 1rem;
+        color: #4a5568;
+        text-align: center;
+    }
+
+    .document-link {
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .document-link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .no-documents {
+        padding: 3rem;
+        text-align: center;
+        color: #888;
+        font-size: 1.1rem;
+    }
+
+    /* Empty State Styles */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 2px dashed #e2e8f0;
+        border-radius: 15px;
+        background: rgba(248, 250, 252, 0.5);
+        margin: 1rem;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .empty-state-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state-message {
+        font-size: 1rem;
+        color: #718096;
+        line-height: 1.5;
+        max-width: 300px;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Stat Cards Grid -->
+    <div class="stats-grid">
+        <div class="stat-card total-released">
+            <div class="stat-card-content">
+                <div class="stat-icon">📦</div>
+                <div class="stat-info">
+                    <h3>{{ total_released }}</h3>
+                    <p>Total Released</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card todays-released">
+            <div class="stat-card-content">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <h3>{{ todays_released }}</h3>
+                    <p>Today's Released</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Left Column -->
+        <div class="left-column">
+            <div class="welcome-card">
+                <div class="welcome-header">
+                    <div class="welcome-icon">🏠</div>
+                    <h3 class="welcome-title">Welcome to Releasing</h3>
+                </div>
+                <p class="welcome-subtitle">Manage and track all outgoing documents and releases from this central dashboard.</p>
+                <div class="datetime-display" id="datetime"></div>
+            </div>
+        </div>
+
+        <!-- Right Column - Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-icon">📋</div>
+                <h3 class="table-title">Recently Added Documents</h3>
+            </div>
+            <div class="table-container">
+                <div id="documentsContent">
+                    <table class="table" id="documentsTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Control #</th>
+                                <th>Source</th>
+                                <th>Document</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentsTableBody">
+                            {% for doc in recent_outgoing_docs %}
+                                <tr class="document-row" data-date="{{ doc.date_sent }}">
+                                    <td>{{ doc.date_sent }}</td>
+                                    <td>{{ doc.time_sent }}</td>
+                                    <td>{{ doc.control_no }}</td>
+                                    <td>{{ doc.source }}</td>
+                                    <td>
+                                        {% if doc.document_file %}
+                                            <a href="{{ url_for('download_outgoing_file', doc_id=doc.id) }}" class="document-link">{{ doc.document_file }}</a>
+                                        {% else %}-{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-state-icon">📮</div>
+                        <div class="empty-state-title">No documents found</div>
+                        <div class="empty-state-message">Start by adding your first outgoing document to the system.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDateTime() {
+    var now = new Date();
+    var date = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    var time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('datetime').textContent = date + ' ' + time;
+}
+
+function filterTodayDocuments() {
+    var today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    var documentRows = document.querySelectorAll('.document-row');
+    var visibleCount = 0;
+    var documentsTable = document.getElementById('documentsTable');
+    var emptyState = document.getElementById('emptyState');
+    
+    documentRows.forEach(function(row) {
+        var docDate = row.getAttribute('data-date');
+        if (docDate === today) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show/hide table or empty state based on whether there are documents for today
+    if (visibleCount === 0) {
+        if (documentsTable) documentsTable.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'flex';
+    } else {
+        if (documentsTable) documentsTable.style.display = 'table';
+        if (emptyState) emptyState.style.display = 'none';
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateDateTime();
+    filterTodayDocuments();
+    setInterval(updateDateTime, 1000);
+});
+</script>
+{% endblock %} 

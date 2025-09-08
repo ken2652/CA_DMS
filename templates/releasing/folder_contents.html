@@ -1,0 +1,513 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ folder.folder_name }} - Folder Contents{% endblock %}
+
+{% block header_title %}{{ folder.folder_name }}{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .folder-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Back Button */
+    .back-section {
+        margin-bottom: 2rem;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        transition: var(--transition);
+        background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+        border: 2px solid #c7d2fe;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .back-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        transition: left 0.3s;
+        z-index: -1;
+    }
+
+    .back-button:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+        text-decoration: none;
+    }
+
+    .back-button:hover::before {
+        left: 0;
+    }
+
+    .back-icon {
+        font-size: 1.4rem;
+        transition: transform 0.3s;
+    }
+
+    .back-button:hover .back-icon {
+        transform: translateX(-3px);
+    }
+
+    /* Folder Info Card */
+    .folder-info {
+        background: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .folder-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .folder-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .folder-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .folder-details {
+        flex: 1;
+    }
+
+    .folder-name {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #333;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .folder-count {
+        color: #666;
+        margin: 0.5rem 0 0 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .folder-description {
+        background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .description-title {
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 0.8rem 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .description-text {
+        color: #666;
+        margin: 0;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    .folder-meta {
+        display: flex;
+        gap: 2rem;
+        color: #888;
+        font-size: 0.95rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: #666;
+    }
+
+    .meta-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* Files Section */
+    .files-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        padding: 2.5rem;
+    }
+
+    .files-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .files-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+    }
+
+    .files-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .files-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .file-item {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .file-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .file-item:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+        border-color: #667eea;
+    }
+
+    .file-item:hover::before {
+        transform: scaleX(1);
+    }
+
+    .file-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .file-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .file-details {
+        flex: 1;
+    }
+
+    .file-name {
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        font-size: 1.1rem;
+        word-break: break-word;
+        line-height: 1.3;
+    }
+
+    .file-meta {
+        color: #666;
+        margin: 0.3rem 0 0 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .action-button {
+        background: var(--primary-gradient);
+        color: white;
+        text-decoration: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-button.preview {
+        background: var(--success-gradient);
+        box-shadow: 0 2px 8px rgba(67, 233, 123, 0.3);
+    }
+
+    .action-button.preview:hover {
+        box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+    }
+
+    .action-button.download {
+        background: var(--accent-gradient);
+        box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+    }
+
+    .action-button.download:hover {
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+    }
+
+    .file-upload-info {
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        font-weight: 500;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        color: #666;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.6;
+    }
+
+    .empty-text {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .folder-container {
+            padding: 1rem;
+        }
+        
+        .folder-info,
+        .files-section {
+            padding: 1.5rem;
+        }
+        
+        .folder-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .folder-meta {
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .file-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .file-actions {
+            justify-content: center;
+        }
+        
+        .action-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+<div class="folder-container">
+    <!-- Enhanced Back Button -->
+    <div class="back-section">
+        <a href="/releasing/outgoing_folder" class="back-button">
+            <span class="back-icon">←</span>
+            <span>Back to Folders</span>
+        </a>
+    </div>
+
+    <!-- Folder Info Card -->
+    <div class="folder-info">
+        <div class="folder-header">
+            <div class="folder-icon">📁</div>
+            <div class="folder-details">
+                <h2 class="folder-name">{{ folder.folder_name }}</h2>
+                <p class="folder-count">{{ files|length }} files</p>
+            </div>
+        </div>
+        
+        {% if folder.folder_description %}
+        <div class="folder-description">
+            <h4 class="description-title">
+                <span>📝</span>
+                <span>Description</span>
+            </h4>
+            <p class="description-text">{{ folder.folder_description }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="folder-meta">
+            <div class="meta-item">
+                <span class="meta-label">Created by:</span>
+                <span class="meta-value">{{ folder.created_by }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Created:</span>
+                <span class="meta-value">{{ folder.created_at.strftime('%B %d, %Y at %I:%M %p') if folder.created_at else 'Unknown' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Files Section -->
+    <div class="files-section">
+        <div class="files-header">
+            <div class="files-icon">📄</div>
+            <h3 class="files-title">Files in this folder</h3>
+        </div>
+        
+        {% if files %}
+        <div class="files-grid">
+            {% for file in files %}
+            <div class="file-item">
+                <div class="file-header">
+                    <div class="file-icon">
+                        {% if file.file_name.lower().endswith('.pdf') %}📄
+                        {% elif file.file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}🖼️
+                        {% elif file.file_name.lower().endswith(('.doc', '.docx')) %}📝
+                        {% elif file.file_name.lower().endswith(('.xls', '.xlsx')) %}📊
+                        {% elif file.file_name.lower().endswith(('.ppt', '.pptx')) %}📽️
+                        {% else %}📎{% endif %}
+                    </div>
+                    <div class="file-details">
+                        <h4 class="file-name">{{ file.file_name }}</h4>
+                        <p class="file-meta">
+                            {{ (file.file_size / 1024)|round(1) }} KB • {{ file.file_type or 'Unknown type' }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="file-actions">
+                    <a href="/releasing/folder/{{ folder.id }}/preview/{{ file.id }}" 
+                       target="_blank" class="action-button preview">
+                        <span>👁️</span>
+                        <span>Preview</span>
+                    </a>
+                    <a href="/releasing/folder/{{ folder.id }}/download/{{ file.id }}" 
+                       class="action-button download">
+                        <span>⬇️</span>
+                        <span>Download</span>
+                    </a>
+                </div>
+                
+                <div class="file-upload-info">
+                    Uploaded by {{ file.uploaded_by }} on {{ file.uploaded_at.strftime('%B %d, %Y at %I:%M %p') if file.uploaded_at else 'Unknown' }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📄</div>
+            <div class="empty-text">No files in this folder</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

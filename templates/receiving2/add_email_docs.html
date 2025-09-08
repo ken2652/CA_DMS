@@ -1,0 +1,1696 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'add_email_docs' %}
+{% block title %}Add Other Documents{% endblock %}
+{% block header_title %}Add Other Documents{% endblock %}
+{% block content %}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .docs-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* Header Section */
+    .header-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex: 1;
+    }
+
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .header-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .search-container {
+        position: relative;
+        min-width: 300px;
+        max-width: 400px;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        color: #333;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(102, 126, 234, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .search-input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+        transition: color 0.3s ease;
+    }
+
+    .search-input:focus::placeholder {
+        color: #cbd5e1;
+    }
+
+    .search-container:hover .search-input {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .add-document-btn {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .add-document-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Documents Table Section */
+    .table-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .table-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .table-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .table-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .table-count {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .table-container {
+        background: #f8fafc;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .documents-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .documents-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .documents-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .documents-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: var(--transition);
+    }
+
+    .documents-table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .documents-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #4a5568;
+    }
+
+    .document-link {
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .document-link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .action-button {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-button.view {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+
+    .action-button.view:hover {
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+    }
+
+    .action-button.edit {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .action-button.edit:hover {
+        background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+
+    .no-documents {
+        padding: 3rem;
+        text-align: center;
+        color: #888;
+        font-size: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .no-documents-icon {
+        font-size: 3rem;
+        opacity: 0.6;
+        color: #667eea;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+        backdrop-filter: blur(10px);
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-overlay.show {
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        max-width: 900px;
+        width: 95vw;
+        max-height: 88vh;
+        overflow-y: auto;
+        transform: scale(0.7) translateY(-30px) rotateX(5deg);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+    }
+
+    .modal-overlay.show .modal-content {
+        transform: scale(1) translateY(0) rotateX(0deg);
+        opacity: 1;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2.5rem 3rem 2rem 3rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px 24px 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modal-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .modal-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: white;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .modal-title::before {
+        content: '📄';
+        font-size: 1.8rem;
+    }
+
+    .modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        padding: 0;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-body {
+        padding: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .form-group {
+        margin-bottom: 0.6rem;
+        position: relative;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2d3748;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        display: block;
+        position: relative;
+        padding-left: 0.8rem;
+    }
+
+    .form-label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .form-input, .form-textarea, .form-select {
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(102, 126, 234, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .form-input:hover, .form-textarea:hover, .form-select:hover {
+        border-color: #cbd5e0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 50px;
+        resize: vertical;
+        line-height: 1.3;
+    }
+
+    .file-upload-area {
+        border: 3px dashed #667eea;
+        border-radius: 10px;
+        padding: 1.2rem 0.8rem;
+        text-align: center;
+        background: linear-gradient(135deg, #f7fbff 0%, #f0f4ff 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .file-upload-area::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+        border-color: #764ba2;
+        background: linear-gradient(135deg, #f0f4ff 0%, #e6f3ff 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    }
+
+    .file-upload-area:hover::before {
+        opacity: 1;
+    }
+
+    .file-upload-area input[type="file"] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+    }
+
+    .upload-text {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.3rem;
+    }
+
+    .upload-subtext {
+        color: #64748b;
+        font-size: 0.75rem;
+    }
+
+    .upload-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 0.8rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .upload-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    }
+
+    .upload-btn:hover::before {
+        left: 100%;
+    }
+
+    .upload-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem 0.8rem;
+        align-items: start;
+    }
+
+    .checkbox-item {
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.3;
+        color: #2d3748;
+        padding: 0.3rem 0;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 0.5rem;
+        width: 1.1em;
+        height: 1.1em;
+        flex-shrink: 0;
+        accent-color: #667eea;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:hover::before {
+        left: 100%;
+    }
+
+    .submit-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    /* Toastification System */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 300px;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast.success {
+        border-left-color: #43e97b;
+        background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+    }
+
+    .toast.error {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    }
+
+    .toast.info {
+        border-left-color: #4facfe;
+        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    }
+
+    .toast.warning {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .toast.success .toast-icon {
+        background: #43e97b;
+        color: white;
+    }
+
+    .toast.error .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast.info .toast-icon {
+        background: #4facfe;
+        color: white;
+    }
+
+    .toast.warning .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+        color: #2d3748;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+        color: #4a5568;
+        line-height: 1.4;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #a0aec0;
+        cursor: pointer;
+        padding: 0.2rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 1.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #4a5568;
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 12px 12px;
+        transition: width linear;
+    }
+
+    .toast.success .toast-progress {
+        background: #43e97b;
+    }
+
+    .toast.error .toast-progress {
+        background: #fa709a;
+    }
+
+    .toast.info .toast-progress {
+        background: #4facfe;
+    }
+
+    .toast.warning .toast-progress {
+        background: #fa709a;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .docs-container {
+            padding: 1rem;
+        }
+
+        .header-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .header-left {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .search-container {
+            min-width: auto;
+            width: 100%;
+        }
+
+        .form-row {
+            flex-direction: column;
+        }
+
+        .checkbox-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            width: 95vw;
+            margin: 1rem;
+            border-radius: 16px;
+        }
+        
+        .modal-header {
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.4rem;
+        }
+        
+        .form-label {
+            font-size: 0.9rem;
+            padding-left: 1.2rem;
+        }
+        
+        .form-label::before {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            padding: 0.9rem 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .file-upload-area {
+            padding: 2rem 1.5rem;
+        }
+        
+        .submit-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="docs-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="header-left">
+            <div class="header-icon">📧</div>
+            <h2 class="header-title">Other Documents</h2>
+        </div>
+        <div class="search-container">
+            <input id="searchSourceInput" type="text" class="search-input" placeholder="Search Source, Control #, or Particulars...">
+        </div>
+        <a href="#" id="openAddDocModal" class="add-document-btn">
+            <span>➕</span>
+            <span>Add Document</span>
+        </a>
+    </div>
+
+    <!-- Documents Table Section -->
+    <div class="table-section">
+        <div class="table-header">
+            <h3 class="table-title">
+                <div class="table-icon">📋</div>
+                <span>Documents</span>
+            </h3>
+            <div class="table-info">
+                <span>Showing <span class="table-count">{{ email_documents|length if email_documents else 0 }}</span> documents</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="documents-table">
+                <thead>
+                    <tr>
+                        <th>Date Received</th>
+                        <th>Time</th>
+                        <th>Control #</th>
+                        <th>Source</th>
+                        <th>Particulars</th>
+                        <th>Forwarded To</th>
+                        <th>Purpose/Action</th>
+                        <th>Document</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in email_documents %}
+                    <tr>
+                        <td>{{ doc.date_received }}</td>
+                        <td>{{ doc.time_received }}</td>
+                        <td>{{ doc.control_no }}</td>
+                        <td>{{ doc.source }}</td>
+                        <td>{{ doc.particulars }}</td>
+                        <td>{{ doc.forwarded_to }}</td>
+                        <td style="max-width: 200px; word-break: break-word; white-space: normal;">
+                        {% if doc.purpose_action %}
+                                <span style="color: #667eea; font-weight: 600; font-size: 0.9rem;">{{ doc.purpose_action }}</span>
+                        {% else %}
+                                <span style="color: #888; font-style: italic;">No purpose/action</span>
+                        {% endif %}
+                    </td>
+                        <td>
+                    {% if doc.document_file %}
+                                <a href="{{ url_for('download_email_doc', doc_id=doc.id) }}" class="document-link">
+                                    {{ doc.document_file }}
+                                </a>
+                    {% else %}
+                                <span style="color: #999;">No file</span>
+                    {% endif %}
+                </td>
+                        <td>{{ doc.created_at }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="#" 
+                                   class="action-button view"
+                           data-id="{{ doc.id }}"
+                           data-date="{{ doc.date_received }}"
+                           data-time="{{ doc.time_received }}"
+                           data-control="{{ doc.control_no }}"
+                           data-source="{{ doc.source }}"
+                           data-particulars="{{ doc.particulars }}"
+                           data-forwarded="{{ doc.forwarded_to }}"
+                           data-purpose-action="{{ doc.purpose_action }}"
+                           data-document="{{ doc.document_file }}"
+                           data-attachment="{{ doc.attachment_file }}"
+                                   data-created="{{ doc.created_at }}">
+                                    <span>🔍</span>
+                                    <span>View Details</span>
+                        </a>
+                        <a href="#"
+                                   class="action-button edit"
+                           data-id="{{ doc.id }}"
+                           data-date="{{ doc.date_received }}"
+                           data-time="{{ doc.time_received }}"
+                           data-control="{{ doc.control_no|e }}"
+                           data-source="{{ doc.source|e }}"
+                           data-particulars="{{ doc.particulars|e }}"
+                           data-forwarded="{{ doc.forwarded_to|e }}"
+                                   data-purpose-action="{{ doc.purpose_action|e }}">
+                                    <span>✏️</span>
+                                    <span>Edit</span>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+                        <tr>
+                        <td colspan="10" class="no-documents">
+                            <div class="no-documents-icon">📋</div>
+                            <p>No documents found.</p>
+                            </td>
+                        </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+
+<!-- Add Document Modal -->
+<div id="addDocModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add New Other Document</h3>
+            <button class="modal-close" onclick="closeAddDocModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="post" enctype="multipart/form-data" autocomplete="off" style="position: relative;">
+                <!-- Form Header -->
+                <div style="text-align: center; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 2px solid #f1f5f9;">
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #2d3748; margin-bottom: 0.15rem;">📋 Document Information</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">Please fill in all required fields to add a new document</div>
+                </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <!-- Left Column - Form Fields -->
+                <div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date Received *</label>
+                    <input type="date" name="date_received" id="dateReceivedInput" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time *</label>
+                    <input type="time" name="time_received" id="timeReceivedInput" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Control #</label>
+                    <input type="text" name="control_no" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Source *</label>
+                    <input type="text" name="source" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Forwarded To</label>
+                <input type="text" name="forwarded_to" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Particulars *</label>
+                <textarea name="particulars" required class="form-textarea"></textarea>
+                </div>
+            </div>
+
+                <!-- Right Column - Purpose/Action Checkboxes -->
+                <div>
+            <div class="form-group">
+                <label class="form-label">Purpose/Action</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="FOR CM RTD'S APPROVAL">FOR CM RTD'S APPROVAL
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="FOR LEGAL OPINION/RECOMMENDATION">FOR LEGAL OPINION/RECOMMENDATION
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="Appropriate Action">Appropriate Action
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="Comment/Recommendation">Comment/Recommendation
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="Investigate & Advice">Investigate & Advice
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="Prepare Briefer">Prepare Briefer
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="To Attend">To Attend
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="purpose" value="for filling">for filling
+                    </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="FOR CM RTD's SIGNATURE">FOR CM RTD's SIGNATURE
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="FOR REVIEW (Legal)">FOR REVIEW (Legal)
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="Clearance/Compliance of Necessary Docs">Clearance/Compliance of Necessary Docs
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="INFORMATION & GUIDANCE">INFORMATION & GUIDANCE
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="Submit Incidental Report">Submit Incidental Report
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="See Me">See Me
+                    </label>
+                    <label class="checkbox-item">
+                                    <input type="checkbox" name="purpose" value="for filling">for filling
+                    </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Sections - Side by Side -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label class="form-label">Document File</label>
+                    <div class="file-upload-area">
+                        <div class="upload-text">Attach Document</div>
+                        <input type="file" name="document_file" id="documentFileInput" required>
+                        <button type="button" onclick="document.getElementById('documentFileInput').click()" class="upload-btn">Choose File</button>
+                        <div id="selectedFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Additional Attachment</label>
+                <div class="file-upload-area">
+                    <div class="upload-text">Attach Additional File</div>
+                    <input type="file" name="additional_attachment" id="additionalAttachmentInput">
+                    <button type="button" onclick="document.getElementById('additionalAttachmentInput').click()" class="upload-btn">Choose File</button>
+                    <div id="selectedAdditionalFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Submit Section -->
+                <div style="margin-top: 1.2rem; padding-top: 0.8rem; border-top: 2px solid #f1f5f9;">
+                    <button type="submit" class="submit-btn">
+                        <span style="margin-right: 0.5rem;">✅</span>
+                        Add Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="addEmailLoadingOverlay" class="loading-overlay">
+    <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; align-items: center; gap: 1rem; min-width: 260px;">
+        <div class="loading-spinner"></div>
+        <div style="font-weight: 700; color: #667eea; font-size: 1.05rem;">Storing, please wait…</div>
+    </div>
+</div>
+
+<!-- Toastification Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Success Toast Trigger -->
+{% if success == '1' %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showToast('success', 'Document Added Successfully!', 'Your document was successfully added to the system.');
+    });
+</script>
+{% endif %}
+
+<!-- Include all the existing JavaScript -->
+<script>
+// Modal functions
+function openAddDocModal() {
+    document.getElementById('addDocModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('addDocModal').classList.add('show');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+    setTimeout(fillDateTime, 50);
+    resetAddEmailDocSubmitState();
+}
+
+function closeAddDocModal() {
+    document.getElementById('addDocModal').classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('addDocModal').style.display = 'none';
+    }, 300);
+    document.body.style.overflow = 'auto';
+    document.getElementById('addDocModal').querySelector('form').reset();
+    document.getElementById('selectedFileName').textContent = '';
+    document.getElementById('selectedAdditionalFileName').textContent = '';
+}
+
+// Toastification System
+function showToast(type, title, message, duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    toast.className = `toast ${type}`;
+    toast.id = toastId;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type]}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="removeToast('${toastId}')">&times;</button>
+        <div class="toast-progress"></div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            removeToast(toastId);
+        }, duration);
+        
+        // Progress bar animation
+        const progress = toast.querySelector('.toast-progress');
+        progress.style.width = '100%';
+        progress.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 10);
+    }
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 400);
+    }
+}
+
+// Clear success parameter from URL
+function clearSuccessParameter() {
+    if (window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('success');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+}
+
+// Autofill date and time
+function fillDateTime() {
+    const now = new Date();
+    document.getElementById('dateReceivedInput').value = now.toISOString().slice(0, 10);
+    document.getElementById('timeReceivedInput').value = now.toTimeString().slice(0, 5);
+}
+
+// File input handlers
+document.getElementById('documentFileInput').addEventListener('change', function(e) {
+    var fileName = e.target.files.length ? e.target.files[0].name : '';
+    document.getElementById('selectedFileName').textContent = fileName;
+});
+
+document.getElementById('additionalAttachmentInput').addEventListener('change', function(e) {
+    var fileName = e.target.files.length ? e.target.files[0].name : '';
+    document.getElementById('selectedAdditionalFileName').textContent = fileName;
+});
+
+// Search functionality
+function filterTableBySource() {
+    var input = document.getElementById('searchSourceInput');
+    var filter = input.value.toLowerCase();
+    var table = document.querySelector('.documents-table');
+    var trs = table.querySelectorAll('tbody tr');
+    trs.forEach(function(row) {
+        var controlCell = row.children[2];
+        var sourceCell = row.children[3];
+        var particularsCell = row.children[4];
+        var controlText = controlCell ? controlCell.textContent.toLowerCase() : '';
+        var sourceText = sourceCell ? sourceCell.textContent.toLowerCase() : '';
+        var particularsText = particularsCell ? particularsCell.textContent.toLowerCase() : '';
+        if (!filter || controlText.indexOf(filter) > -1 || sourceText.indexOf(filter) > -1 || particularsText.indexOf(filter) > -1) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Search input
+    var searchInput = document.getElementById('searchSourceInput');
+    if (searchInput) searchInput.addEventListener('input', filterTableBySource);
+
+    // Add document button
+    var openBtn = document.getElementById('openAddDocModal');
+    if (openBtn) openBtn.onclick = function(e) { e.preventDefault(); openAddDocModal(); };
+
+    // Modal close on outside click
+    window.onclick = function(event) {
+        var modal = document.getElementById('addDocModal');
+        if (event.target === modal) closeAddDocModal();
+    };
+
+    // Clear success parameter after showing toast
+    if (window.location.search.includes('success=1')) {
+        setTimeout(clearSuccessParameter, 1000);
+    }
+
+    // Setup action button listeners
+    setupActionButtons();
+});
+
+// Preview document functionality
+function previewDocument(docId, documentFile) {
+    if (documentFile) {
+        // Use the preview route to display document in browser instead of downloading
+        const previewUrl = `${window.location.origin}/receiving2/preview_email_doc/${docId}`;
+        window.open(previewUrl, '_blank');
+    } else {
+        showToast('warning', 'No Document Available', 'No document file is available for preview.');
+    }
+}
+
+// Action buttons functionality
+function setupActionButtons() {
+    document.querySelectorAll('.action-button.view').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const docId = this.dataset.id;
+            const date = this.dataset.date;
+            const time = this.dataset.time;
+            const control = this.dataset.control;
+            const source = this.dataset.source;
+            const particulars = this.dataset.particulars;
+            const forwarded = this.dataset.forwarded;
+            const purposeAction = this.dataset.purposeAction;
+            const documentFile = this.dataset.document;
+            const attachmentFile = this.dataset.attachment;
+            const createdAt = this.dataset.created;
+
+            openViewDetailsModal(docId, date, time, control, source, particulars, forwarded, purposeAction, documentFile, attachmentFile, createdAt);
+        });
+    });
+
+    document.querySelectorAll('.action-button.edit').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const docId = this.dataset.id;
+            const date = this.dataset.date;
+            const time = this.dataset.time;
+            const control = this.dataset.control;
+            const source = this.dataset.source;
+            const particulars = this.dataset.particulars;
+            const forwarded = this.dataset.forwarded;
+            const purposeAction = this.dataset.purposeAction;
+            const documentFile = this.dataset.document;
+            const attachmentFile = this.dataset.attachment;
+            const createdAt = this.dataset.created;
+
+            openEditDocumentModal(docId, date, time, control, source, particulars, forwarded, purposeAction, documentFile, attachmentFile, createdAt);
+        });
+    });
+}
+
+// Open view details modal
+function openViewDetailsModal(docId, date, time, control, source, particulars, forwarded, purposeAction, documentFile, attachmentFile, createdAt) {
+    const modalHtml = `
+        <div id="viewDetailsModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Document Details</h3>
+                    <button class="modal-close" onclick="closeViewDetailsModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 2.5rem;">
+                        <h3 style="color: #667eea; border-left: 4px solid #667eea; padding-left: 1rem; margin-bottom: 1.5rem; font-size: 1.2rem; font-weight: 600;">Basic Information</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div><strong style="color: #374151; font-weight: 600;">Date Received:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${date}</span></div>
+                                <div><strong style="color: #374151; font-weight: 600;">Control Number:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${control}</span></div>
+                                <div><strong style="color: #374151; font-weight: 600;">Forwarded To:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${forwarded || 'Not specified'}</span></div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div><strong style="color: #374151; font-weight: 600;">Time Received:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${time}</span></div>
+                                <div><strong style="color: #374151; font-weight: 600;">Source:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${source}</span></div>
+                                <div><strong style="color: #374151; font-weight: 600;">Particulars:</strong> <span style="color: #6b7280; margin-left: 0.5rem;">${particulars}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2.5rem;">
+                        <h3 style="color: #059669; border-left: 4px solid #059669; padding-left: 1rem; margin-bottom: 1.5rem; font-size: 1.2rem; font-weight: 600;">Purpose/Action</h3>
+                        <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #059669;">
+                            <span style="color: #065f46; font-weight: 500; line-height: 1.6;">${purposeAction || 'None specified'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2.5rem;">
+                        <h3 style="color: #f59e0b; border-left: 4px solid #f59e0b; padding-left: 1rem; margin-bottom: 1.5rem; font-size: 1.2rem; font-weight: 600;">Document Files</h3>
+                        <div style="background: #fffbeb; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <strong style="color: #92400e; font-weight: 600;">Document:</strong> 
+                                    <span style="color: #92400e; margin-left: 0.5rem;">${documentFile || 'No file'}</span>
+                                </div>
+                                ${documentFile ? `<button onclick="previewDocument('${docId}', '${documentFile}')" class="action-button view" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 0.6rem 1.2rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer;">👁️ Preview</button>` : ''}
+                            </div>
+                            <div>
+                                <strong style="color: #92400e; font-weight: 600;">Attachment:</strong> 
+                                <span style="color: #92400e; margin-left: 0.5rem;">${attachmentFile || 'No attachment'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="closeViewDetailsModal()" class="submit-btn" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border: none; padding: 1rem; border-radius: 12px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease;">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show the modal with animation
+    setTimeout(() => {
+        const modal = document.getElementById('viewDetailsModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+    }, 10);
+}
+
+// Close view details modal
+function closeViewDetailsModal() {
+    const modal = document.getElementById('viewDetailsModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300);
+    }
+}
+
+// Open edit document modal
+function openEditDocumentModal(docId, date, time, control, source, particulars, forwarded, purposeAction, documentFile, attachmentFile, createdAt) {
+    const modalHtml = `
+        <div id="editDocumentModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Edit Document</h3>
+                    <button class="modal-close" onclick="closeEditDocumentModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDocumentForm" method="post" enctype="multipart/form-data" autocomplete="off">
+                    <input type="hidden" name="doc_id" value="${docId}">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <!-- Left Column - Form Fields -->
+                        <div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Date Received *</label>
+                                    <input type="date" name="date_received" value="${date}" required class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Time *</label>
+                                    <input type="time" name="time_received" value="${time}" required class="form-input">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Control #</label>
+                                    <input type="text" name="control_no" value="${control}" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Source *</label>
+                                    <input type="text" name="source" value="${source}" required class="form-input">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Forwarded To</label>
+                                <input type="text" name="forwarded_to" value="${forwarded || ''}" class="form-input">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Particulars *</label>
+                                <textarea name="particulars" required class="form-textarea">${particulars}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Purpose/Action Checkboxes -->
+                        <div>
+                            <div class="form-group">
+                                <label class="form-label">Purpose/Action</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; align-items: start;">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="FOR CM RTD'S APPROVAL" ${purposeAction && purposeAction.includes('FOR CM RTD\'S APPROVAL') ? 'checked' : ''}>FOR CM RTD'S APPROVAL
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="FOR CM RTD's SIGNATURE" ${purposeAction && purposeAction.includes('FOR CM RTD\'s SIGNATURE') ? 'checked' : ''}>FOR CM RTD'S SIGNATURE
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="FOR LEGAL OPINION/RECOMMENDATION" ${purposeAction && purposeAction.includes('FOR LEGAL OPINION/RECOMMENDATION') ? 'checked' : ''}>FOR LEGAL OPINION/RECOMMENDATION
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="FOR REVIEW (Legal)" ${purposeAction && purposeAction.includes('FOR REVIEW (Legal)') ? 'checked' : ''}>FOR REVIEW (Legal)
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Appropriate Action" ${purposeAction && purposeAction.includes('Appropriate Action') ? 'checked' : ''}>Appropriate Action
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Clearance/Compliance of Necessary Docs" ${purposeAction && purposeAction.includes('Clearance/Compliance of Necessary Docs') ? 'checked' : ''}>Clearance/Compliance of Necessary Docs
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Comment/Recommendation" ${purposeAction && purposeAction.includes('Comment/Recommendation') ? 'checked' : ''}>Comment/Recommendation
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="INFORMATION & GUIDANCE" ${purposeAction && purposeAction.includes('INFORMATION & GUIDANCE') ? 'checked' : ''}>INFORMATION & GUIDANCE
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Investigate & Advice" ${purposeAction && purposeAction.includes('Investigate & Advice') ? 'checked' : ''}>Investigate & Advice
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Submit Incidental Report" ${purposeAction && purposeAction.includes('Submit Incidental Report') ? 'checked' : ''}>Submit Incidental Report
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="Prepare Briefer" ${purposeAction && purposeAction.includes('Prepare Briefer') ? 'checked' : ''}>Prepare Briefer
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="See Me" ${purposeAction && purposeAction.includes('See Me') ? 'checked' : ''}>See Me
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="To Attend" ${purposeAction && purposeAction.includes('To Attend') ? 'checked' : ''}>To Attend
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="purpose" value="for filling" ${purposeAction && purposeAction.includes('for filling') ? 'checked' : ''}>for filling
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Sections - Full Width -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div class="form-group">
+                            <label class="form-label">Document File</label>
+                            <div class="file-upload-area">
+                                <div class="upload-text">Update Document (Optional)</div>
+                                <input type="file" name="document_file" id="editDocumentFileInput">
+                                <button type="button" onclick="document.getElementById('editDocumentFileInput').click()" class="upload-btn">Choose File</button>
+                                <div id="editSelectedFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">${documentFile || 'No file selected'}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Additional Attachment</label>
+                            <div class="file-upload-area">
+                                <div class="upload-text">Update Additional File (Optional)</div>
+                                <input type="file" name="additional_attachment" id="editAdditionalAttachmentInput">
+                                <button type="button" onclick="document.getElementById('editAdditionalAttachmentInput').click()" class="upload-btn">Choose File</button>
+                                <div id="editSelectedAdditionalFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">${attachmentFile || 'No file selected'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Update Document</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show the modal with animation
+    setTimeout(() => {
+        const modal = document.getElementById('editDocumentModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+    }, 10);
+    
+    // Setup file input handlers for edit modal
+    setupEditFileHandlers();
+}
+
+// Close edit document modal
+function closeEditDocumentModal() {
+    const modal = document.getElementById('editDocumentModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300);
+    }
+}
+
+// Setup file handlers for edit modal
+function setupEditFileHandlers() {
+    document.getElementById('editDocumentFileInput').addEventListener('change', function(e) {
+        var fileName = e.target.files.length ? e.target.files[0].name : '';
+        document.getElementById('editSelectedFileName').textContent = fileName || 'No file selected';
+    });
+
+    document.getElementById('editAdditionalAttachmentInput').addEventListener('change', function(e) {
+        var fileName = e.target.files.length ? e.target.files[0].name : '';
+        document.getElementById('editSelectedAdditionalFileName').textContent = fileName || 'No file selected';
+    });
+}
+
+// Submission guard
+let isAddEmailDocSubmitting = false;
+function resetAddEmailDocSubmitState() {
+    isAddEmailDocSubmitting = false;
+    const submitBtn = document.querySelector('#addDocModal form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Document';
+    }
+    const overlay = document.getElementById('addEmailLoadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const addForm = document.querySelector('#addDocModal form');
+    if (!addForm) return;
+    addForm.addEventListener('submit', function(e) {
+        if (isAddEmailDocSubmitting) { e.preventDefault(); return; }
+        isAddEmailDocSubmitting = true;
+        const submitBtn = addForm.querySelector('button[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
+        const overlay = document.getElementById('addEmailLoadingOverlay');
+        if (overlay) overlay.style.display = 'flex';
+    });
+});
+</script>
+
+{% endblock %} 

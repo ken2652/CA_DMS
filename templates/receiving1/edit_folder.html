@@ -1,0 +1,397 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Folder - Receiving{% endblock %}
+
+{% block header_title %}Receiving - Edit Folder{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .edit-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Error Messages */
+    .error-message {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Edit Folder Section */
+    .edit-folder-section {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .edit-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .edit-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: white;
+    }
+
+    .back-button {
+        background: #e2e8f0;
+        color: #333;
+        text-decoration: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-button:hover {
+        background: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: #333;
+        text-decoration: none;
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.8rem;
+        font-size: 1rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 1rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: var(--transition);
+        box-sizing: border-box;
+        background: #f8fafc;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 1rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        resize: vertical;
+        transition: var(--transition);
+        box-sizing: border-box;
+        background: #f8fafc;
+        min-height: 120px;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Folder Info Card */
+    .folder-info {
+        background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .folder-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+    }
+
+    .folder-info-title {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .folder-info-grid {
+        display: grid;
+        gap: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #333;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .cancel-button {
+        flex: 1;
+        background: #e2e8f0;
+        color: #333;
+        text-decoration: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-align: center;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .cancel-button:hover {
+        background: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: #333;
+        text-decoration: none;
+    }
+
+    .submit-button {
+        flex: 1;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .edit-container {
+            padding: 1rem;
+        }
+        
+        .edit-folder-section {
+            padding: 1.5rem;
+        }
+        
+        .edit-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+        }
+        
+        .info-value {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="edit-container">
+    <!-- Error Messages -->
+    {% if error %}
+    <div class="error-message">
+        <span>❌</span>
+        <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Edit Folder Form -->
+    <div class="edit-folder-section">
+        <div class="edit-header">
+            <h3 class="edit-title">
+                <div class="edit-icon">✏️</div>
+                <span>Edit Folder</span>
+            </h3>
+            <a href="{{ url_for('receiving1_document_folder') }}" class="back-button">
+                <span>←</span>
+                <span>Back to Folders</span>
+            </a>
+        </div>
+        
+        <form method="POST" id="editFolderForm">
+            <div class="form-group">
+                <label for="folder_name" class="form-label">Folder Name *</label>
+                <input type="text" id="folder_name" name="folder_name" required 
+                       value="{{ folder.folder_name }}"
+                       placeholder="Enter folder name..." class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="folder_description" class="form-label">Folder Description</label>
+                <textarea id="folder_description" name="folder_description" rows="4" 
+                          placeholder="Enter folder description..." class="form-textarea">{{ folder.folder_description or '' }}</textarea>
+            </div>
+
+            <div class="folder-info">
+                <h4 class="folder-info-title">
+                    <span>📋</span>
+                    <span>Folder Information</span>
+                </h4>
+                <div class="folder-info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Created by:</span>
+                        <span class="info-value">{{ folder.created_by or 'Unknown' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Created on:</span>
+                        <span class="info-value">{{ folder.created_at.strftime('%B %d, %Y at %I:%M %p') if folder.created_at else 'Unknown' }}</span>
+                    </div>
+                    {% if folder.updated_at %}
+                    <div class="info-row">
+                        <span class="info-label">Last updated:</span>
+                        <span class="info-value">{{ folder.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('receiving1_document_folder') }}" class="cancel-button">
+                    Cancel
+                </a>
+                <button type="submit" class="submit-button">
+                    Update Folder
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    document.getElementById('editFolderForm').addEventListener('submit', function(e) {
+        const folderName = document.getElementById('folder_name').value.trim();
+        
+        if (!folderName) {
+            e.preventDefault();
+            alert('Please enter a folder name');
+            return;
+        }
+    });
+
+    // Input focus effects
+    const inputs = document.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#667eea';
+            this.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+        });
+
+        input.addEventListener('blur', function() {
+            this.style.borderColor = '#e2e8f0';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>
+
+{% endblock %} 

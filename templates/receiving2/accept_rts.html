@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'accept_rts' %}
+{% block title %}Accept RTS{% endblock %}
+{% block header_title %}Accept RTS{% endblock %}
+{% block content %}
+<!-- Bootstrap CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px #e0e7ef22;padding:2.5rem 2.5rem 2rem 2.5rem;max-width:900px;margin:auto;">
+    <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:2rem;text-align:left;">Accept & Edit RTS Document from Receiving 1</h2>
+    <form method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label for="control_no" style="font-weight:600;">Control # (Receiving 2)</label>
+                <input type="text" id="control_no" name="control_no" value="{{ doc.control_no }}" required style="padding:0.7rem 1.1rem;border-radius:7px;border:1.5px solid #e0e7ef;font-size:1.08rem;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label for="received_by" style="font-weight:600;">Received By</label>
+                <input type="text" id="received_by" name="received_by" value="{{ doc.received_by }}" style="padding:0.7rem 1.1rem;border-radius:7px;border:1.5px solid #e0e7ef;font-size:1.08rem;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;grid-column:1/-1;">
+                <label for="forwarded_to" style="font-weight:600;">Forwarded To</label>
+                <input type="text" id="forwarded_to" name="forwarded_to" value="{{ doc.forwarded_to }}" style="padding:0.7rem 1.1rem;border-radius:7px;border:1.5px solid #e0e7ef;font-size:1.08rem;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;grid-column:1/-1;">
+                <label for="edit_reason" style="font-weight:600;">Edit Reason (optional)</label>
+                <input type="text" id="edit_reason" name="edit_reason" placeholder="Reason for editing control # (optional)" style="padding:0.7rem 1.1rem;border-radius:7px;border:1.5px solid #e0e7ef;font-size:1.08rem;">
+            </div>
+        </div>
+        <div style="margin-top:2rem;">
+            <button type="submit" style="background:linear-gradient(90deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;border:none;border-radius:9px;padding:0.9rem 2.2rem;font-weight:700;font-size:1.1rem;cursor:pointer;">Accept & Store</button>
+        </div>
+    </form>
+    <div style="margin-top:2.5rem;color:#888;font-size:1.08rem;">
+        <b>Original Data from Receiving 1:</b><br>
+        <ul style="margin:0.7rem 0 0 1.2rem;padding:0;list-style:disc;">
+            <li>Date Received: {{ doc.date_received }}</li>
+            <li>Time Received: {{ doc.time_received }}</li>
+            <li>Source: {{ doc.source }}</li>
+            <li>Particulars: {{ doc.particulars }}</li>
+            <li>Document File: {{ doc.document_file }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

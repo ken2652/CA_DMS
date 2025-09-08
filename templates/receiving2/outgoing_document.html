@@ -1,0 +1,1887 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'receiving2_outgoing_document' %}
+{% block title %}Outgoing Documents - Admin Receiving {% endblock %}
+{% block header_title %}Outgoing Documents{% endblock %}
+{% block content %}
+<style>
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    --border-radius: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.outgoing-container {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--hover-shadow);
+}
+
+.stat-card.total-outgoing::before { background: var(--primary-gradient); }
+.stat-card.today-outgoing::before { background: var(--secondary-gradient); }
+.stat-card.accepted::before { background: var(--success-gradient); }
+.stat-card.other::before { background: var(--accent-gradient); }
+
+.stat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: var(--transition);
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stat-info h3 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.stat-info p {
+    margin: 0.5rem 0 0 0;
+    color: #666;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Content Card */
+.content-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.content-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Search and Filter */
+.search-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #f8fafc;
+    transition: var(--transition);
+    min-width: 260px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.date-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.date-input {
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #ff6b35;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fff;
+    color: #333;
+    transition: var(--transition);
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #ff6b35;
+    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+}
+
+.filter-btn {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+}
+
+.clear-btn {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.clear-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(108, 117, 125, 0.4);
+}
+
+/* Table Styling */
+.table-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 15px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    width: 100%;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.05rem;
+    table-layout: auto;
+}
+
+.data-table th:nth-child(1) { width: 8%; }  /* Type */
+.data-table th:nth-child(2) { width: 10%; } /* Date Received */
+.data-table th:nth-child(3) { width: 8%; }  /* Time */
+.data-table th:nth-child(4) { width: 10%; } /* Control # */
+.data-table th:nth-child(5) { width: 12%; } /* Source */
+.data-table th:nth-child(6) { width: 15%; } /* Purpose/Action */
+.data-table th:nth-child(7) { width: 18%; } /* Document */
+.data-table th:nth-child(8) { width: 12%; } /* Attachment */
+.data-table th:nth-child(9) { width: 10%; } /* Date Accepted */
+.data-table th:nth-child(10) { width: 7%; } /* Actions */
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--primary-gradient);
+}
+
+.data-table th {
+    padding: 1.2rem 1rem;
+    text-align: left;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: var(--transition);
+    background: white;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.data-table td {
+    padding: 1rem;
+    color: #475569;
+}
+
+.data-table td a {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.data-table td a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.status-outgoing {
+    background: #28a745;
+}
+
+.status-other {
+    background: #9c27b0;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.view-details-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff !important;
+    padding: 0.45rem 1.2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: var(--transition);
+    display: inline-block;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.view-details-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a5acd 100%);
+}
+
+.view-details-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px #6a82fb22;
+}
+
+
+
+/* Button states */
+.view-details-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.view-details-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Focus states for accessibility */
+.view-details-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+
+
+/* Button loading states */
+.view-details-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.view-details-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Ensure button text is always visible */
+.view-details-btn {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.view-details-btn:hover {
+    color: #ffffff !important;
+}
+
+.view-details-btn:focus {
+    color: #ffffff !important;
+}
+
+.edit-details-btn {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff !important;
+    padding: 0.45rem 1.2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    transition: var(--transition);
+    display: inline-block;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.edit-details-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    color: #ffffff !important;
+}
+
+.edit-details-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.edit-details-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.edit-details-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.edit-details-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3);
+    color: #ffffff !important;
+}
+
+.animated-edit-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
+}
+
+.animated-edit-details:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .outgoing-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .stat-info h3 {
+        font-size: 2rem;
+    }
+    
+    .content-card {
+        padding: 1.5rem;
+    }
+    
+    .content-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input {
+        min-width: auto;
+    }
+    
+    .date-filter-container {
+        justify-content: center;
+    }
+    
+    .data-table {
+        font-size: 0.9rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.8rem 0.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.3rem;
+        align-items: stretch;
+    }
+    
+    .view-details-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .data-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .date-filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Toastification System */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 300px;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast.success {
+        border-left-color: #43e97b;
+        background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+    }
+
+    .toast.error {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    }
+
+    .toast.info {
+        border-left-color: #4facfe;
+        background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    }
+
+    .toast.warning {
+        border-left-color: #fa709a;
+        background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .toast.success .toast-icon {
+        background: #43e97b;
+        color: white;
+    }
+
+    .toast.error .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast.info .toast-icon {
+        background: #4facfe;
+        color: white;
+    }
+
+    .toast.warning .toast-icon {
+        background: #fa709a;
+        color: white;
+    }
+
+    .toast-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+        color: #2d3748;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+        color: #4a5568;
+        line-height: 1.4;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #a0aec0;
+        cursor: pointer;
+        padding: 0.2rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 1.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #4a5568;
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 12px 12px;
+        transition: width linear;
+    }
+
+    .toast.success .toast-progress {
+        background: #43e97b;
+    }
+
+    .toast.error .toast-progress {
+        background: #fa709a;
+    }
+
+    .toast.info .toast-progress {
+        background: #4facfe;
+    }
+
+    .toast.warning .toast-progress {
+        background: #fa709a;
+    }
+}
+</style>
+
+<div class="outgoing-container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total-outgoing">
+            <div class="stat-card-content">
+                <div class="stat-icon">📤</div>
+                <div class="stat-info">
+                    <h3>{{ total_other_docs + accepted_docs }}</h3>
+                    <p>Total Outgoing Docs</p>
+            </div>
+        </div>
+    </div>
+        
+        <div class="stat-card today-outgoing">
+            <div class="stat-card-content">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <h3>{{ today_outgoing_docs }}</h3>
+                    <p>Today's Outgoing</p>
+            </div>
+        </div>
+    </div>
+        
+        <div class="stat-card accepted">
+            <div class="stat-card-content">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3>{{ accepted_docs }}</h3>
+                    <p>Accepted Documents</p>
+            </div>
+        </div>
+    </div>
+        
+        <div class="stat-card other">
+            <div class="stat-card-content">
+                <div class="stat-icon">📧</div>
+                <div class="stat-info">
+                    <h3>{{ total_other_docs }}</h3>
+                    <p>Other Documents</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Content Card -->
+    <div class="content-card">
+        <div class="content-header">
+            <h2 class="content-title">Outgoing Documents</h2>
+            <div class="search-filter-container">
+                <input id="searchSourceInput" type="text" class="search-input" placeholder="Search Source, Control #, or Particulars...">
+                <div class="date-filter-container">
+                    <input id="fromDateInput" type="date" class="date-input" placeholder="From date...">
+            <span style="color:#ff6b35;font-weight:600;font-size:1.1rem;">to</span>
+                    <input id="toDateInput" type="date" class="date-input" placeholder="To date...">
+                    <button id="filterDateBtn" class="filter-btn">Filter</button>
+                    <button id="clearDateBtn" class="clear-btn">Clear</button>
+                </div>
+        </div>
+    </div>
+
+    <script>
+    // Build a client-side cache of all rows across pagination for global searching
+    let allRowsCache = [];
+    let allRowsLoaded = false;
+    let originalTbodyHTML = '';
+    let filterDebounceTimer = null;
+
+    async function loadAllRowsAcrossPages() {
+        if (allRowsLoaded) return;
+
+        const tbody = document.querySelector('.data-table tbody');
+        if (!tbody) return;
+
+        // Save original page HTML for restore when clearing search
+        if (!originalTbodyHTML) {
+            originalTbodyHTML = tbody.innerHTML;
+        }
+
+        // Helper to extract rows from a given root (document or fragment)
+        const extractRows = (root) => {
+            const rows = root.querySelectorAll('.data-table tbody tr');
+            rows.forEach((row) => {
+                const cells = row.getElementsByTagName('td');
+                if (!cells || cells.length <= 1) return; // skip empty state row
+                const detailsBtn = row.querySelector('.view-details-btn');
+                const controlNo = cells[3] ? (cells[3].textContent || '').trim() : '';
+                const source = cells[4] ? (cells[4].textContent || '').trim() : '';
+                const particulars = detailsBtn ? (detailsBtn.getAttribute('data-particulars') || '').trim() : '';
+                allRowsCache.push({
+                    html: row.outerHTML,
+                    controlNo: controlNo.toLowerCase(),
+                    source: source.toLowerCase(),
+                    particulars: particulars.toLowerCase()
+                });
+            });
+        };
+
+        // 1) Collect current page rows
+        extractRows(document);
+
+        // 2) Fetch remaining pages in parallel
+        const totalPages = Number("{{ total_pages|default(1) }}");
+        const currentUrl = new URL(window.location.href);
+        const currentPage = Number("{{ page|default(1) }}");
+
+        const fetchPromises = [];
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === currentPage) continue;
+            const url = new URL(currentUrl);
+            url.searchParams.set('page', String(p));
+            fetchPromises.push(
+                fetch(url.toString())
+                    .then((res) => res.text())
+                    .then((html) => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        extractRows(doc);
+                    })
+                    .catch(() => {})
+            );
+        }
+
+        await Promise.all(fetchPromises);
+        allRowsLoaded = true;
+    }
+
+    function filterTableBySource() {
+        const input = document.getElementById('searchSourceInput');
+        const query = (input.value || '').toLowerCase();
+        const tbody = document.querySelector('.data-table tbody');
+        if (!tbody) return;
+
+        // Show/hide pagination based on query
+        var paginationDiv = document.getElementById('paginationControls');
+        if (paginationDiv) {
+            paginationDiv.style.display = query ? 'none' : 'flex';
+        }
+
+        // If query empty, restore original current page content
+        if (!query) {
+            if (originalTbodyHTML) {
+                tbody.innerHTML = originalTbodyHTML;
+            }
+            return;
+        }
+
+        clearTimeout(filterDebounceTimer);
+        filterDebounceTimer = setTimeout(async () => {
+            await loadAllRowsAcrossPages();
+
+            const matches = allRowsCache.filter((r) =>
+                r.controlNo.indexOf(query) > -1 ||
+                r.source.indexOf(query) > -1 ||
+                r.particulars.indexOf(query) > -1
+            );
+
+            if (matches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="padding:2.2rem;text-align:center;color:#888;font-size:1.1rem;">No documents found.</td></tr>';
+            } else {
+                tbody.innerHTML = matches.map((m) => m.html).join('');
+            }
+        }, 200);
+    }
+    
+    function filterTableByDate() {
+        var fromDate = document.getElementById('fromDateInput').value;
+        var toDate = document.getElementById('toDateInput').value;
+        var table = document.querySelector('table');
+        var trs = table.querySelectorAll('tbody tr');
+        var visibleCount = 0;
+        
+        trs.forEach(function(row) {
+            var dateCell = row.children[1]; // Date Received column
+            var dateText = dateCell.textContent.trim();
+            
+            if (!fromDate && !toDate) {
+                // No date filter applied, show all rows
+                row.style.display = '';
+                visibleCount++;
+                return;
+            }
+            
+            // Convert date text to Date object (assuming format like "2024-01-15")
+            var rowDate = new Date(dateText);
+            
+            var showRow = true;
+            
+            if (fromDate) {
+                var fromDateObj = new Date(fromDate);
+                if (rowDate < fromDateObj) {
+                    showRow = false;
+                }
+            }
+            
+            if (toDate && showRow) {
+                var toDateObj = new Date(toDate);
+                if (rowDate > toDateObj) {
+                    showRow = false;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+            if (showRow) visibleCount++;
+        });
+        
+        // Show/hide pagination based on filter
+        var paginationDiv = document.getElementById('paginationControls');
+        if (paginationDiv) {
+            if (fromDate || toDate) {
+                paginationDiv.style.display = 'none';
+            } else {
+                paginationDiv.style.display = 'flex';
+            }
+        }
+    }
+    
+    function clearDateFilter() {
+        document.getElementById('fromDateInput').value = '';
+        document.getElementById('toDateInput').value = '';
+        filterTableByDate(); // This will show all rows since no dates are set
+        
+        // Show pagination when filter is cleared
+        var paginationDiv = document.getElementById('paginationControls');
+        if (paginationDiv) {
+            paginationDiv.style.display = 'flex';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var input = document.getElementById('searchSourceInput');
+        if (input) input.addEventListener('input', filterTableBySource);
+        
+        var filterBtn = document.getElementById('filterDateBtn');
+        if (filterBtn) filterBtn.addEventListener('click', filterTableByDate);
+        
+        var clearBtn = document.getElementById('clearDateBtn');
+        if (clearBtn) clearBtn.addEventListener('click', clearDateFilter);
+        
+        // Also filter when dates change
+        var fromDateInput = document.getElementById('fromDateInput');
+        var toDateInput = document.getElementById('toDateInput');
+        if (fromDateInput) fromDateInput.addEventListener('change', filterTableByDate);
+        if (toDateInput) toDateInput.addEventListener('change', filterTableByDate);
+        
+        // Add clear search functionality
+        var searchInput = document.getElementById('searchSourceInput');
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    filterTableBySource();
+                }
+            });
+        }
+    });
+    </script>
+    
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Date Received</th>
+                        <th>Time</th>
+                        <th>Control #</th>
+                        <th>Source</th>
+                        <th>Purpose/Action</th>
+                        <th>Document</th>
+                        <th>Attachment</th>
+                        <th>Date Accepted</th>
+                        <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in outgoing_documents %}
+                    <tr>
+                        <td><span class="status-badge status-outgoing">Outgoing</span></td>
+                        <td>{{ doc.date_received }}</td>
+                        <td>{{ doc.time_received }}</td>
+                        <td>{{ doc.control_no }}</td>
+                        <td>{{ doc.source }}</td>
+                        <td style="max-width:200px;word-break:break-word;white-space:normal;">
+                        {% if doc.purposes %}
+                            <span style="color:#6a82fb;font-weight:600;font-size:0.9rem;">{{ doc.purposes }}</span>
+                        {% elif doc.remarks %}
+                            <span style="color:#6a82fb;font-weight:600;font-size:0.9rem;">{{ doc.remarks }}</span>
+                        {% else %}
+                            <span style="color:#888;font-style:italic;">No purpose/action</span>
+                        {% endif %}
+                    </td>
+                        <td>
+                        {% if doc.document_file %}
+                                <a href="{{ url_for('download_accepted_document', doc_id=doc.id) }}">{{ doc.document_file }}</a>
+                        {% else %}
+                            No file
+                        {% endif %}
+                    </td>
+                        <td>
+                        {% if doc.attachment_file %}
+                                <a href="{{ url_for('download_accepted_attachment', doc_id=doc.id) }}">{{ doc.attachment_file }}</a>
+                        {% else %}
+                            No attachment
+                        {% endif %}
+                    </td>
+                        <td>{{ doc.date_accepted }}</td>
+                        <td>
+                            <div class="action-buttons">
+                            <a href="#" 
+                               class="view-details-btn animated-view-details"
+                               data-id="{{ doc.id }}"
+                               data-date="{{ doc.date_received }}"
+                               data-time="{{ doc.time_received }}"
+                               data-control="{{ doc.control_no }}"
+                               data-source="{{ doc.source }}"
+                               data-particulars="{{ doc.particulars }}"
+                               data-received="{{ doc.received_by }}"
+                               data-forwarded="{{ doc.forwarded_to }}"
+                               data-purposes="{{ doc.purposes }}"
+                               data-remarks="{{ doc.remarks }}"
+                               data-document="{{ doc.document_file }}"
+                               data-attachment="{{ doc.attachment_file }}"
+                               data-date-accepted="{{ doc.date_accepted }}"
+                               data-time-accepted="{{ doc.time_accepted }}"
+                                   data-accepted-by="{{ doc.accepted_by }}">
+                                    🔍 View Details
+                                </a>
+                            <a href="#" 
+                               class="edit-details-btn animated-edit-details"
+                               data-id="{{ doc.id }}"
+                               data-date="{{ doc.date_received }}"
+                               data-time="{{ doc.time_received }}"
+                               data-control="{{ doc.control_no }}"
+                               data-source="{{ doc.source }}"
+                               data-particulars="{{ doc.particulars }}"
+                               data-received="{{ doc.received_by }}"
+                               data-forwarded="{{ doc.forwarded_to }}"
+                               data-purposes="{{ doc.purposes }}"
+                               data-remarks="{{ doc.remarks }}"
+                               data-document="{{ doc.document_file }}"
+                               data-attachment="{{ doc.attachment_file }}"
+                               data-date-accepted="{{ doc.date_accepted }}"
+                               data-time-accepted="{{ doc.time_accepted }}"
+                                   data-accepted-by="{{ doc.accepted_by }}">
+                                    ✏️ Edit
+                                </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                {% for doc in other_documents %}
+                    <tr>
+                        <td><span class="status-badge status-other">Other Outgoing</span></td>
+                        <td>{{ doc.date_received }}</td>
+                        <td>{{ doc.time_received }}</td>
+                        <td>{{ doc.control_no }}</td>
+                        <td>{{ doc.source }}</td>
+                        <td style="max-width:200px;word-break:break-word;white-space:normal;">
+                        {% if doc.purpose_action %}
+                            <span style="color:#6a82fb;font-weight:600;font-size:0.9rem;">{{ doc.purpose_action }}</span>
+                        {% else %}
+                            <span style="color:#888;font-style:italic;">No purpose/action</span>
+                        {% endif %}
+                    </td>
+                        <td>
+                        {% if doc.document_file %}
+                                <a href="{{ url_for('download_email_doc', doc_id=doc.id) }}">{{ doc.document_file }}</a>
+                        {% else %}
+                            No file
+                        {% endif %}
+                    </td>
+                        <td>
+                        {% if doc.attachment_file %}
+                                <a href="{{ url_for('download_email_doc_attachment', doc_id=doc.id) }}">{{ doc.attachment_file }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                        <td>-</td>
+                        <td>
+                            <div class="action-buttons">
+                            <a href="#" 
+                               class="view-details-btn animated-view-details"
+                               data-id="{{ doc.id }}"
+                               data-date="{{ doc.date_received }}"
+                               data-time="{{ doc.time_received }}"
+                               data-control="{{ doc.control_no }}"
+                               data-source="{{ doc.source }}"
+                               data-particulars="{{ doc.particulars }}"
+                               data-received="{{ doc.received_by }}"
+                               data-forwarded="{{ doc.forwarded_to }}"
+                               data-purpose-action="{{ doc.purpose_action }}"
+                               data-document="{{ doc.document_file }}"
+                               data-attachment="{{ doc.attachment_file }}"
+                                   data-created="{{ doc.created_at }}">
+                                    🔍 View Details
+                                </a>
+                            <a href="#" 
+                               class="edit-details-btn animated-edit-details"
+                               data-id="{{ doc.id }}"
+                               data-date="{{ doc.date_received }}"
+                               data-time="{{ doc.time_received }}"
+                               data-control="{{ doc.control_no }}"
+                               data-source="{{ doc.source }}"
+                               data-particulars="{{ doc.particulars }}"
+                               data-received="{{ doc.received_by }}"
+                               data-forwarded="{{ doc.forwarded_to }}"
+                               data-purpose-action="{{ doc.purpose_action }}"
+                               data-document="{{ doc.document_file }}"
+                               data-attachment="{{ doc.attachment_file }}"
+                                   data-created="{{ doc.created_at }}">
+                                    ✏️ Edit
+                                </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                {% if not outgoing_documents and not other_documents %}
+                <tr><td colspan="10" style="padding:2.2rem;text-align:center;color:#888;font-size:1.1rem;">No documents found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+    <div id="paginationControls" style="display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:2rem;padding:1.5rem;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;align-items:center;gap:0.5rem;color:#666;font-size:0.95rem;">
+            <span>Showing {{ (page - 1) * per_page + 1 }}-{{ [page * per_page, total_documents] | min }} of {{ total_documents }} documents</span>
+        </div>
+        
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+            {% if has_prev %}
+                <a href="{{ url_for('receiving2_outgoing_docs', page=page-1) }}" 
+                   style="background:linear-gradient(135deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;padding:0.6rem 1rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.9rem;transition:all 0.3s;box-shadow:0 2px 8px rgba(106,130,251,0.3);" 
+                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 16px rgba(106,130,251,0.4)'" 
+                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(106,130,251,0.3)'">
+                    ← Previous
+                </a>
+            {% else %}
+                <span style="background:#e9ecef;color:#6c757d;padding:0.6rem 1rem;border-radius:8px;font-weight:600;font-size:0.9rem;cursor:not-allowed;">← Previous</span>
+            {% endif %}
+            
+            <div style="display:flex;align-items:center;gap:0.3rem;">
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <span style="background:linear-gradient(135deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;padding:0.6rem 0.8rem;border-radius:8px;font-weight:700;font-size:0.9rem;min-width:2.5rem;text-align:center;box-shadow:0 2px 8px rgba(106,130,251,0.3);">{{ p }}</span>
+                    {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                        <a href="{{ url_for('receiving2_outgoing_docs', page=p) }}" 
+                           style="background:#fff;color:#6a82fb;padding:0.6rem 0.8rem;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;min-width:2.5rem;text-align:center;border:2px solid #6a82fb;transition:all 0.3s;" 
+                           onmouseover="this.style.background='#6a82fb';this.style.color='#fff'" 
+                           onmouseout="this.style.background='#fff';this.style.color='#6a82fb'">{{ p }}</a>
+                    {% elif p == 4 and page > 5 %}
+                        <span style="color:#6c757d;padding:0.6rem 0.3rem;font-weight:600;">...</span>
+                    {% elif p == total_pages - 3 and page < total_pages - 4 %}
+                        <span style="color:#6c757d;padding:0.6rem 0.3rem;font-weight:600;">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            {% if has_next %}
+                <a href="{{ url_for('receiving2_outgoing_docs', page=page+1) }}" 
+                   style="background:linear-gradient(135deg,#6a82fb 0%,#5f6ee6 100%);color:#fff;padding:0.6rem 1rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.9rem;transition:all 0.3s;box-shadow:0 2px 8px rgba(106,130,251,0.3);" 
+                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 16px rgba(106,130,251,0.4)'" 
+                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(106,130,251,0.3)'">
+                    Next →
+                </a>
+            {% else %}
+                <span style="background:#e9ecef;color:#6c757d;padding:0.6rem 1rem;border-radius:8px;font-weight:600;font-size:0.9rem;cursor:not-allowed;">Next →</span>
+            {% endif %}
+        </div>
+        
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:1rem;">
+            <span style="color:#666;font-size:0.9rem;">Go to:</span>
+            <input type="number" id="pageInput" min="1" max="{{ total_pages }}" value="{{ page }}" 
+                   style="width:4rem;padding:0.4rem;border:1px solid #ddd;border-radius:4px;text-align:center;font-size:0.9rem;">
+            <button onclick="goToPage()" 
+                    style="background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;border:none;padding:0.4rem 0.8rem;border-radius:4px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 8px rgba(40,167,69,0.3);" 
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 16px rgba(40,167,69,0.4)'" 
+                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(40,167,69,0.3)'">
+                Go
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- View Details Modal -->
+<div id="viewDetailsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;backdrop-filter:blur(4px);">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:2.5rem;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+            <h3 style="font-size:1.5rem;font-weight:700;color:#333;margin:0;">Document Details</h3>
+            <button onclick="closeViewDetailsModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888;padding:0.5rem;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+        
+        <div id="documentDetails" style="line-height:1.6;">
+            <!-- Details will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Document Modal -->
+<div id="editDocumentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;backdrop-filter:blur(4px);">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:2.5rem;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:900px;width:90%;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+            <h3 style="font-size:1.5rem;font-weight:700;color:#333;margin:0;">Edit Document</h3>
+            <button onclick="closeEditDocumentModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888;padding:0.5rem;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+        
+        <form id="editDocumentForm" method="post" enctype="multipart/form-data" autocomplete="off" style="position: relative;">
+            <input type="hidden" name="doc_id" id="editDocId">
+            <input type="hidden" name="doc_type" id="editDocType">
+            
+            <!-- Form Header -->
+            <div style="text-align: center; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 2px solid #f1f5f9;">
+                <div style="font-size: 0.95rem; font-weight: 700; color: #2d3748; margin-bottom: 0.15rem;">📋 Document Information</div>
+                <div style="font-size: 0.75rem; color: #64748b;">Please update the document information below</div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <!-- Left Column - Form Fields -->
+                <div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                        <div style="margin-bottom: 0.6rem; position: relative;">
+                            <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                                Date Received *
+                            </label>
+                            <input type="date" name="date_received" id="editDateReceived" required style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                        </div>
+                        <div style="margin-bottom: 0.6rem; position: relative;">
+                            <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                                Time *
+                            </label>
+                            <input type="time" name="time_received" id="editTimeReceived" required style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                        <div style="margin-bottom: 0.6rem; position: relative;">
+                            <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                                Control #
+                            </label>
+                            <input type="text" name="control_no" id="editControlNo" style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                        </div>
+                        <div style="margin-bottom: 0.6rem; position: relative;">
+                            <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                                Source *
+                            </label>
+                            <input type="text" name="source" id="editSource" required style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 0.6rem; position: relative;">
+                        <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                            <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                            Forwarded To
+                        </label>
+                        <input type="text" name="forwarded_to" id="editForwardedTo" style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                    </div>
+
+                    <div style="margin-bottom: 0.6rem; position: relative;">
+                        <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                            <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                            Particulars *
+                        </label>
+                        <textarea name="particulars" id="editParticulars" required style="width: 100%; padding: 0.5rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); min-height: 50px; resize: vertical; line-height: 1.3;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Right Column - Purpose/Action Checkboxes -->
+                <div>
+                    <div style="margin-bottom: 0.6rem; position: relative;">
+                        <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                            <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                            Purpose/Action
+                        </label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; align-items: start;">
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="FOR CM RTD'S APPROVAL" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">FOR CM RTD'S APPROVAL
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="FOR CM RTD's SIGNATURE" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">FOR CM RTD'S SIGNATURE
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="FOR LEGAL OPINION/RECOMMENDATION" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">FOR LEGAL OPINION/RECOMMENDATION
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="FOR REVIEW (Legal)" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">FOR REVIEW (Legal)
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Appropriate Action" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Appropriate Action
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Clearance/Compliance of Necessary Docs" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Clearance/Compliance of Necessary Docs
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Comment/Recommendation" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Comment/Recommendation
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="INFORMATION & GUIDANCE" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">INFORMATION & GUIDANCE
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Investigate & Advice" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Investigate & Advice
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Submit Incidental Report" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Submit Incidental Report
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="Prepare Briefer" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">Prepare Briefer
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="See Me" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">See Me
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="To Attend" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">To Attend
+                            </label>
+                            <label style="font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; line-height: 1.3; color: #2d3748; padding: 0.3rem 0;">
+                                <input type="checkbox" name="purpose" value="for filling" style="margin-right: 0.5rem; width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: #667eea;">for filling
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Sections - Side by Side -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div style="margin-bottom: 0.6rem; position: relative;">
+                    <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                        <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                        Document File
+                    </label>
+                    <div style="border: 3px dashed #667eea; border-radius: 10px; padding: 1.2rem 0.8rem; text-align: center; background: linear-gradient(135deg, #f7fbff 0%, #f0f4ff 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;">
+                        <div style="font-size: 0.9rem; font-weight: 600; color: #2d3748; margin-bottom: 0.3rem;">Update Document (Optional)</div>
+                        <input type="file" name="document_file" id="editDocumentFileInput" style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; top: 0; left: 0;">
+                        <button type="button" onclick="document.getElementById('editDocumentFileInput').click()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; padding: 0.8rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 0.8rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 0.5rem;">Choose File</button>
+                        <div id="editSelectedFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">No file selected</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 0.6rem; position: relative;">
+                    <label style="font-weight: 700; color: #2d3748; font-size: 0.8rem; margin-bottom: 0.2rem; display: block; position: relative; padding-left: 0.8rem;">
+                        <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"></span>
+                        Additional Attachment
+                    </label>
+                    <div style="border: 3px dashed #667eea; border-radius: 10px; padding: 1.2rem 0.8rem; text-align: center; background: linear-gradient(135deg, #f7fbff 0%, #f0f4ff 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;">
+                        <div style="font-size: 0.9rem; font-weight: 600; color: #2d3748; margin-bottom: 0.3rem;">Update Additional File (Optional)</div>
+                        <input type="file" name="additional_attachment" id="editAdditionalAttachmentInput" style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; top: 0; left: 0;">
+                        <button type="button" onclick="document.getElementById('editAdditionalAttachmentInput').click()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; padding: 0.8rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 0.8rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 0.5rem;">Choose File</button>
+                        <div id="editSelectedAdditionalFileName" style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">No file selected</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Section -->
+            <div style="margin-top: 1.2rem; padding-top: 0.8rem; border-top: 2px solid #f1f5f9;">
+                <button type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 16px; padding: 1.2rem 2.5rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <span style="margin-right: 0.5rem;">✅</span>
+                    Update Document
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<!-- Toastification Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Error messages now use toastification system -->
+
+<style>
+.animated-view-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px #6a82fb44;
+}
+
+.animated-view-details:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px #6a82fb22;
+}
+
+.animated-btn-bg {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.animated-view-details:hover .animated-btn-bg {
+    left: 100%;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+#viewDetailsModal > div {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Preview button hover effects */
+#viewDetailsModal button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+}
+
+#viewDetailsModal button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+}
+
+/* Loading state for preview buttons */
+#viewDetailsModal button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+function showViewDetailsModal(button) {
+    const modal = document.getElementById('viewDetailsModal');
+    const detailsContainer = document.getElementById('documentDetails');
+    
+    // Get data from button attributes
+    const data = {
+        id: button.getAttribute('data-id'),
+        date: button.getAttribute('data-date'),
+        time: button.getAttribute('data-time'),
+        control: button.getAttribute('data-control'),
+        source: button.getAttribute('data-source'),
+        particulars: button.getAttribute('data-particulars'),
+        received: button.getAttribute('data-received'),
+        forwarded: button.getAttribute('data-forwarded'),
+        purposes: button.getAttribute('data-purposes'),
+        remarks: button.getAttribute('data-remarks'),
+        purposeAction: button.getAttribute('data-purpose-action'),
+        document: button.getAttribute('data-document'),
+        attachment: button.getAttribute('data-attachment'),
+        dateAccepted: button.getAttribute('data-date-accepted'),
+        timeAccepted: button.getAttribute('data-time-accepted'),
+        acceptedBy: button.getAttribute('data-accepted-by'),
+        created: button.getAttribute('data-created')
+    };
+    
+    // Build details HTML
+    let detailsHTML = '<div style="display:grid;gap:1rem;">';
+    
+    // Basic Information
+    detailsHTML += '<div style="background:#f8f9fa;padding:1.5rem;border-radius:8px;border-left:4px solid #6a82fb;">';
+    detailsHTML += '<h4 style="margin:0 0 1rem 0;color:#6a82fb;font-size:1.1rem;">Basic Information</h4>';
+    detailsHTML += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:0.95rem;">';
+    detailsHTML += `<div><strong>Date Received:</strong> ${data.date || 'N/A'}</div>`;
+    detailsHTML += `<div><strong>Time Received:</strong> ${data.time || 'N/A'}</div>`;
+    detailsHTML += `<div><strong>Control Number:</strong> ${data.control || 'N/A'}</div>`;
+    detailsHTML += `<div><strong>Source:</strong> ${data.source || 'N/A'}</div>`;
+    detailsHTML += `<div><strong>Received By:</strong> ${data.received || 'N/A'}</div>`;
+    detailsHTML += `<div><strong>Forwarded To:</strong> ${data.forwarded || 'N/A'}</div>`;
+    detailsHTML += '</div>';
+    detailsHTML += `<div style="margin-top:1rem;"><strong>Particulars:</strong> ${data.particulars || 'N/A'}</div>`;
+    detailsHTML += '</div>';
+    
+    // Purpose/Action Information
+    if (data.purposes || data.remarks || data.purposeAction) {
+        detailsHTML += '<div style="background:#f8f9fa;padding:1.5rem;border-radius:8px;border-left:4px solid #28a745;">';
+        detailsHTML += '<h4 style="margin:0 0 1rem 0;color:#28a745;font-size:1.1rem;">Purpose/Action</h4>';
+        if (data.purposes) detailsHTML += `<div><strong>Purposes:</strong> ${data.purposes}</div>`;
+        if (data.remarks) detailsHTML += `<div><strong>Remarks:</strong> ${data.remarks}</div>`;
+        if (data.purposeAction) detailsHTML += `<div><strong>Purpose/Action:</strong> ${data.purposeAction}</div>`;
+        detailsHTML += '</div>';
+    }
+    
+    // Document Files
+    detailsHTML += '<div style="background:#f8f9fa;padding:1.5rem;border-radius:8px;border-left:4px solid #ffc107;">';
+    detailsHTML += '<h4 style="margin:0 0 1rem 0;color:#ffc107;font-size:1.1rem;">Document Files</h4>';
+    
+    // Document file with preview button
+    if (data.document && data.document !== 'No file') {
+        detailsHTML += '<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">';
+        detailsHTML += `<div style="flex:1;"><strong>Document:</strong> ${data.document}</div>`;
+        detailsHTML += `<button onclick="previewDocument('${data.id}', 'document')" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;padding:0.5rem 1rem;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:0.5rem;box-shadow:0 2px 8px rgba(102,126,234,0.3);">`;
+        detailsHTML += '<span style="font-size:1rem;">👁️</span> Preview';
+        detailsHTML += '</button>';
+        detailsHTML += '</div>';
+    } else {
+        detailsHTML += `<div><strong>Document:</strong> ${data.document || 'No file'}</div>`;
+    }
+    
+    // Attachment file with preview button
+    if (data.attachment && data.attachment !== 'No attachment') {
+        detailsHTML += '<div style="display:flex;align-items:center;gap:1rem;">';
+        detailsHTML += `<div style="flex:1;"><strong>Attachment:</strong> ${data.attachment}</div>`;
+        detailsHTML += `<button onclick="previewDocument('${data.id}', 'attachment')" style="background:linear-gradient(135deg,#9c27b0 0%,#e91e63 100%);color:white;border:none;border-radius:8px;padding:0.5rem 1rem;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:0.5rem;box-shadow:0 2px 8px rgba(156,39,176,0.3);">`;
+        detailsHTML += '<span style="font-size:1rem;">👁️</span> Preview';
+        detailsHTML += '</button>';
+        detailsHTML += '</div>';
+    } else {
+        detailsHTML += `<div><strong>Attachment:</strong> ${data.attachment || 'No attachment'}</div>`;
+    }
+    
+    detailsHTML += '</div>';
+    
+    // Acceptance Information (for outgoing documents)
+    if (data.dateAccepted || data.timeAccepted || data.acceptedBy) {
+        detailsHTML += '<div style="background:#f8f9fa;padding:1.5rem;border-radius:8px;border-left:4px solid #17a2b8;">';
+        detailsHTML += '<h4 style="margin:0 0 1rem 0;color:#17a2b8;font-size:1.1rem;">Acceptance Information</h4>';
+        detailsHTML += `<div><strong>Date Accepted:</strong> ${data.dateAccepted || 'N/A'}</div>`;
+        detailsHTML += `<div><strong>Time Accepted:</strong> ${data.timeAccepted || 'N/A'}</div>`;
+        detailsHTML += `<div><strong>Accepted By:</strong> ${data.acceptedBy || 'N/A'}</div>`;
+        detailsHTML += '</div>';
+    }
+    
+    // Creation Information (for other documents)
+    if (data.created) {
+        detailsHTML += '<div style="background:#f8f9fa;padding:1.5rem;border-radius:8px;border-left:4px solid #6f42c1;">';
+        detailsHTML += '<h4 style="margin:0 0 1rem 0;color:#6f42c1;font-size:1.1rem;">Creation Information</h4>';
+        detailsHTML += `<div><strong>Created At:</strong> ${data.created}</div>`;
+        detailsHTML += '</div>';
+    }
+    
+    detailsHTML += '</div>';
+    
+    detailsContainer.innerHTML = detailsHTML;
+    modal.style.display = 'block';
+}
+
+function closeViewDetailsModal() {
+    document.getElementById('viewDetailsModal').style.display = 'none';
+}
+
+function showEditDocumentModal(button) {
+    const modal = document.getElementById('editDocumentModal');
+    
+    // Get data from button attributes
+    const data = {
+        id: button.getAttribute('data-id'),
+        date: button.getAttribute('data-date'),
+        time: button.getAttribute('data-time'),
+        control: button.getAttribute('data-control'),
+        source: button.getAttribute('data-source'),
+        particulars: button.getAttribute('data-particulars'),
+        received: button.getAttribute('data-received'),
+        forwarded: button.getAttribute('data-forwarded'),
+        purposes: button.getAttribute('data-purposes'),
+        remarks: button.getAttribute('data-remarks'),
+        purposeAction: button.getAttribute('data-purpose-action'),
+        document: button.getAttribute('data-document'),
+        attachment: button.getAttribute('data-attachment'),
+        dateAccepted: button.getAttribute('data-date-accepted'),
+        timeAccepted: button.getAttribute('data-time-accepted'),
+        acceptedBy: button.getAttribute('data-accepted-by'),
+        created: button.getAttribute('data-created')
+    };
+    
+    // Determine document type based on available data
+    let docType = 'accepted';
+    if (data.created && !data.dateAccepted) {
+        docType = 'other';
+    }
+    
+    // Populate form fields
+    document.getElementById('editDocId').value = data.id;
+    document.getElementById('editDocType').value = docType;
+    document.getElementById('editDateReceived').value = data.date || '';
+    document.getElementById('editTimeReceived').value = data.time || '';
+    document.getElementById('editControlNo').value = data.control || '';
+    document.getElementById('editSource').value = data.source || '';
+    document.getElementById('editForwardedTo').value = data.forwarded || '';
+    document.getElementById('editParticulars').value = data.particulars || '';
+    
+    // Set current file names
+    document.getElementById('editSelectedFileName').textContent = data.document || 'No file selected';
+    document.getElementById('editSelectedAdditionalFileName').textContent = data.attachment || 'No file selected';
+    
+    // Handle purpose/action checkboxes
+    const purposeValue = data.purposes || data.remarks || data.purposeAction || '';
+    const checkboxes = document.querySelectorAll('#editDocumentForm input[name="purpose"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = purposeValue.includes(checkbox.value);
+    });
+    
+    // Show modal
+    modal.style.display = 'block';
+}
+
+function closeEditDocumentModal() {
+    document.getElementById('editDocumentModal').style.display = 'none';
+    // Reset form
+    document.getElementById('editDocumentForm').reset();
+    document.getElementById('editSelectedFileName').textContent = 'No file selected';
+    document.getElementById('editSelectedAdditionalFileName').textContent = 'No file selected';
+}
+
+// File input handlers for edit modal
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('editDocumentFileInput').addEventListener('change', function(e) {
+        var fileName = e.target.files.length ? e.target.files[0].name : '';
+        document.getElementById('editSelectedFileName').textContent = fileName || 'No file selected';
+    });
+
+    document.getElementById('editAdditionalAttachmentInput').addEventListener('change', function(e) {
+        var fileName = e.target.files.length ? e.target.files[0].name : '';
+        document.getElementById('editSelectedAdditionalFileName').textContent = fileName || 'No file selected';
+    });
+    
+    // Handle edit form submission
+    document.getElementById('editDocumentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const docId = formData.get('doc_id');
+        const docType = formData.get('doc_type');
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Updating...';
+        submitBtn.disabled = true;
+        
+        // Determine the correct endpoint based on document type
+        let endpoint = '/receiving2/update_purpose_action';
+        if (docType === 'accepted') {
+            endpoint = '/receiving2/update_accepted_document';
+        } else if (docType === 'other') {
+            endpoint = '/receiving2/update_other_document';
+        }
+        
+        fetch(endpoint, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Document Updated Successfully!', data.message);
+                closeEditDocumentModal();
+                // Reload page after a short delay to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showToast('error', 'Update Failed', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Update Failed', 'An error occurred while updating the document.');
+        })
+        .finally(() => {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+});
+
+// Close modal when clicking outside
+document.getElementById('editDocumentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditDocumentModal();
+    }
+});
+
+// Preview document function
+function previewDocument(docId, fileType) {
+    let previewUrl;
+    
+    // Get the document type from the modal data
+    const modal = document.getElementById('viewDetailsModal');
+    const detailsContainer = document.getElementById('documentDetails');
+    
+    // Check if this is an accepted document by looking for acceptance information
+    const hasAcceptanceInfo = detailsContainer.innerHTML.includes('Acceptance Information');
+    const hasCreationInfo = detailsContainer.innerHTML.includes('Creation Information');
+    
+    if (fileType === 'document') {
+        if (hasAcceptanceInfo) {
+            // This is an accepted document from accepted_documents table
+            previewUrl = `/receiving2/preview_accepted_document/${docId}`;
+        } else if (hasCreationInfo) {
+            // This is an other document from other_documents table
+            previewUrl = `/receiving2/preview_email_doc/${docId}`;
+        } else {
+            // Fallback - try to determine from the button's parent context
+            const button = event.target.closest('button');
+            const documentSection = button.closest('div');
+            const documentText = documentSection.textContent;
+            
+            if (documentText.includes('No attachment') && !documentText.includes('Date Accepted')) {
+                // Likely an other document
+                previewUrl = `/receiving2/preview_email_doc/${docId}`;
+            } else {
+                // Likely an accepted document
+                previewUrl = `/receiving2/preview_accepted_document/${docId}`;
+            }
+        }
+    } else if (fileType === 'attachment') {
+        // Check if this is an accepted document or other document
+        if (hasAcceptanceInfo) {
+            // This is an accepted document from accepted_documents table
+            previewUrl = `/receiving2/preview_accepted_attachment/${docId}`;
+        } else if (hasCreationInfo) {
+            // This is an other document from other_documents table
+            previewUrl = `/receiving2/preview_email_doc_attachment/${docId}`;
+        } else {
+            // Fallback - try to determine from the button's parent context
+            const button = event.target.closest('button');
+            const documentSection = button.closest('div');
+            const documentText = documentSection.textContent;
+            
+            if (documentText.includes('No attachment') && !documentText.includes('Date Accepted')) {
+                // Likely an other document
+                previewUrl = `/receiving2/preview_email_doc_attachment/${docId}`;
+            } else {
+                // Likely an accepted document
+                previewUrl = `/receiving2/preview_accepted_attachment/${docId}`;
+            }
+        }
+    }
+    
+    if (previewUrl) {
+        console.log('Preview URL:', previewUrl);
+        console.log('Document ID:', docId);
+        console.log('File Type:', fileType);
+        console.log('Has Acceptance Info:', hasAcceptanceInfo);
+        console.log('Has Creation Info:', hasCreationInfo);
+        
+        // Open in new tab
+        window.open(previewUrl, '_blank');
+        
+        // Add loading effect to the button
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span style="font-size:1rem;">⏳</span> Loading...';
+        button.style.opacity = '0.7';
+        button.style.pointerEvents = 'none';
+        
+        // Reset button after a short delay
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.opacity = '1';
+            button.style.pointerEvents = 'auto';
+        }, 2000);
+    } else {
+        // Show error message
+        showToast('warning', 'Preview Not Available', 'Preview not available for this document type.');
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('viewDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeViewDetailsModal();
+    }
+});
+
+// Add click event listeners to all view details buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.view-details-btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            showViewDetailsModal(this);
+        });
+    });
+    
+    // Add click event listeners to all edit details buttons
+    const editButtons = document.querySelectorAll('.edit-details-btn');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            showEditDocumentModal(this);
+        });
+    });
+});
+
+// Ensure buttons continue to work after table re-render (event delegation)
+document.addEventListener('click', function(e) {
+    const viewBtn = e.target.closest('.view-details-btn');
+    if (viewBtn) {
+        e.preventDefault();
+        showViewDetailsModal(viewBtn);
+        return;
+    }
+    const editBtn = e.target.closest('.edit-details-btn');
+    if (editBtn) {
+        e.preventDefault();
+        showEditDocumentModal(editBtn);
+    }
+});
+
+
+
+// Toastification System
+function showToast(type, title, message, duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    toast.className = `toast ${type}`;
+    toast.id = toastId;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type]}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="removeToast('${toastId}')">&times;</button>
+        <div class="toast-progress"></div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            removeToast(toastId);
+        }, duration);
+        
+        // Progress bar animation
+        const progress = toast.querySelector('.toast-progress');
+        progress.style.width = '100%';
+        progress.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 10);
+    }
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 400);
+    }
+}
+
+
+
+
+
+// Pagination function
+function goToPage() {
+    const pageInput = document.getElementById('pageInput');
+    const page = parseInt(pageInput.value);
+    const maxPage = parseInt(pageInput.getAttribute('max'));
+    
+    if (page >= 1 && page <= maxPage) {
+        window.location.href = "{{ url_for('receiving2_outgoing_docs') }}?page=" + page;
+    } else {
+        alert('Please enter a valid page number between 1 and ' + maxPage);
+        pageInput.value = "{{ page }}";
+    }
+}
+
+// Allow Enter key to submit page input
+document.addEventListener('DOMContentLoaded', function() {
+    const pageInput = document.getElementById('pageInput');
+    if (pageInput) {
+        pageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                goToPage();
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 
